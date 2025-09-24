@@ -1,7 +1,13 @@
-FROM node:18-alpine
+FROM node:20
 
 WORKDIR /app
 COPY frontend/package*.json ./
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    python3 \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN npm ci
 
 COPY frontend /app
