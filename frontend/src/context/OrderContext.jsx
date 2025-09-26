@@ -1,0 +1,271 @@
+import React, { createContext, useContext, useReducer } from 'react';
+
+// Order Context
+const OrderContext = createContext();
+
+// Order reducer
+const orderReducer = (state, action) => {
+  switch (action.type) {
+    case 'ADD_TO_CART':
+      const existingItemIndex = state.currentOrder.items.findIndex(
+        item => item.product_id === action.payload.product_id
+      );
+
+      let updatedItems;
+      if (existingItemIndex >= 0) {
+        updatedItems = state.currentOrder.items.map((item, index) =>
+          index === existingItemIndex
+            ? { ...item, quantity: item.quantity + action.payload.quantity }
+            : item
+        );
+      } else {
+        updatedItems = [...state.currentOrder.items, action.payload];
+      }
+
+      const newTotal = updatedItems.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
+
+      return {
+        ...state,
+        currentOrder: {
+          ...state.currentOrder,
+          items: updatedItems,
+          total: newTotal
+        }
+      };
+
+    case 'REMOVE_FROM_CART':
+      const filteredItems = state.currentOrder.items.filter(
+        item => item.product_id !== action.payload
+      );
+      const updatedTotal = filteredItems.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
+
+      return {
+        ...state,
+        currentOrder: {
+          ...state.currentOrder,
+          items: filteredItems,
+          total: updatedTotal
+        }
+      };
+
+    case 'UPDATE_QUANTITY':
+      const updatedCartItems = state.currentOrder.items.map(item =>
+        item.product_id === action.payload.product_id
+          ? { ...item, quantity: action.payload.quantity }
+          : item
+      );
+      const recalculatedTotal = updatedCartItems.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
+
+      return {
+        ...state,
+        currentOrder: {
+          ...state.currentOrder,
+          items: updatedCartItems,
+          total: recalculatedTotal
+        }
+      };
+
+    case 'CLEAR_CART':
+      return {
+        ...state,
+        currentOrder: {
+          items: [],
+          total: 0,
+          status: 'draft'
+        }
+      };
+
+    case 'SET_ORDERS':
+      return {
+        ...state,
+        orders: action.payload
+      };
+
+    case 'ADD_ORDER':
+      return {
+        ...state,
+        orders: [...state.orders, action.payload],
+        currentOrder: {
+          items: [],
+          total: 0,
+          status: 'draft'
+        }
+      };
+
+    case 'UPDATE_ORDER_STATUS':
+      return {
+        ...state,
+        orders: state.orders.map(order =>
+          order.order_id === action.payload.order_id
+            ? { ...order, status: action.payload.status }
+            : order
+        )
+      };
+
+    case 'SET_LOADING':
+      return {
+        ...state,
+        isLoading: action.payload
+      };
+
+    case 'SET_ERROR':
+      return {
+        ...state,
+        error: action.payload,
+        isLoading: false
+      };
+
+    default:
+      return state;
+  }
+};
+
+// Initial state
+const initialOrderState = {
+  currentOrder: {
+    items: [],
+    total: 0,
+    status: 'draft'
+  },
+  orders: [],
+  isLoading: false,
+  error: null
+};
+
+// Order Provider
+export const OrderProvider = ({ children }) => {
+  const [state, dispatch] = useReducer(orderReducer, initialOrderState);
+
+  const addToCart = (product, quantity = 1) => {
+    const orderItem = {
+      product_id: product.product_id,
+      quantity: quantity,
+      unit_price: product.price,
+      sub_total: product.price * quantity
+    };
+    dispatch({ type: 'ADD_TO_CART', payload: orderItem });
+  };
+
+  const removeFromCart = (productId) => {
+    dispatch({ type: 'REMOVE_FROM_CART', payload: productId });
+  };
+
+  const updateQuantity = (productId, quantity) => {
+    if (quantity <= 0) {
+      removeFromCart(productId);
+    } else {
+      dispatch({ type: 'UPDATE_QUANTITY', payload: { product_id: productId, quantity } });
+    }
+  };
+
+  const clearCart = () => {
+    dispatch({ type: 'CLEAR_CART' });
+  };
+
+  const submitOrder = async (token) => {
+    dispatch({ type: 'SET_LOADING', payload: true });
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          items: state.currentOrder.items,
+          total: state.currentOrder.total
+        })
+      });
+
+      if (response.ok) {
+        const newOrder = await response.json();
+        dispatch({ type: 'ADD_ORDER', payload: newOrder });
+        return newOrder;
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al crear el pedido');
+      }
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: error.message });
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
+  const fetchOrders = async (token) => {
+    dispatch({ type: 'SET_LOADING', payload: true });
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/orders`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const orders = await response.json();
+        dispatch({ type: 'SET_ORDERS', payload: orders });
+      } else {
+        throw new Error('Error al cargar los pedidos');
+      }
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: error.message });
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
+  const cancelOrder = async (orderId, token) => {
+    dispatch({ type: 'SET_LOADING', payload: true });
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/orders/${orderId}/cancel`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        dispatch({ type: 'UPDATE_ORDER_STATUS', payload: { order_id: orderId, status: 'cancelled' } });
+      } else {
+        throw new Error('Error al cancelar el pedido');
+      }
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: error.message });
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
+  const getCartItemsCount = () => {
+    return state.currentOrder.items.reduce((total, item) => total + item.quantity, 0);
+  };
+
+  const value = {
+    ...state,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+    submitOrder,
+    fetchOrders,
+    cancelOrder,
+    getCartItemsCount
+  };
+
+  return (
+    <OrderContext.Provider value={value}>
+      {children}
+    </OrderContext.Provider>
+  );
+};
+
+// Custom hook
+export const useOrder = () => {
+  const context = useContext(OrderContext);
+  if (!context) {
+    throw new Error('useOrder debe ser usado dentro de OrderProvider');
+  }
+  return context;
+};

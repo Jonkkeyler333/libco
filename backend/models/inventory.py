@@ -13,4 +13,4 @@ class Inventory(SQLModel, table=True):
     quantity: int = Field(default=0, ge=0)
     reserved: int = Field(default=0, ge=0)
     last_updated: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    product: "Product" = Relationship(back_populates="inventory_product")
+    # product: "Product" = Relationship(back_populates="inventory_product")

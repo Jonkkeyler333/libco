@@ -18,5 +18,5 @@ class Order(SQLModel, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     user_created: int = Field(foreign_key="user.user_id")
-    user: "User" = Relationship(back_populates="orders")
-    products: List["Product"] = Relationship(back_populates="orders", link_model=OrderItem)
+    # user: "User" = Relationship(back_populates="orders")
+    # products: List["Product"] = Relationship(back_populates="orders", link_model=OrderItem)

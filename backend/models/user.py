@@ -27,5 +27,5 @@ class User(SQLModel, table=True):
     profile_picture_url: str | None = Field(default=None, nullable=True)
     birthdate: datetime | None = Field(default=None, nullable=True)
     bio: str | None = Field(default=None, nullable=True)
-    orders: List["Order"] = Relationship(back_populates="user")
-    audit_logs: List["AuditLog"] = Relationship(back_populates="actor")
+    # orders: List["Order"] = Relationship(back_populates="user")
+    # audit_logs: List["AuditLog"] = Relationship(back_populates="actor")

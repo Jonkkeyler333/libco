@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from core.config import settings
+from api.auth import router as auth_router
+from db.database import create_db_and_tables
 
 app = FastAPI(
     title=settings.app_name,
@@ -16,6 +18,14 @@ app.add_middleware(
     allow_methods=settings.CORS_ALLOW_METHODS,
     allow_headers=settings.CORS_ALLOW_HEADERS,
 )
+
+# Incluir rutas de autenticación
+app.include_router(auth_router, prefix="/api")
+
+# Crear tablas al iniciar
+@app.on_event("startup")
+async def on_startup():
+    create_db_and_tables()
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root():

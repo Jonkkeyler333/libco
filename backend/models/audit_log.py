@@ -17,4 +17,4 @@ class AuditLog(SQLModel, table=True):
     after_state: str | None = Field(default=None, nullable=True)
     description: str | None = Field(default=None, nullable=True)
     create_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    actor: "User" = Relationship(back_populates="audit_logs")
+    # actor: "User" = Relationship(back_populates="audit_logs")

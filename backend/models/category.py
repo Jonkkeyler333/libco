@@ -15,4 +15,4 @@ class Category(SQLModel, table=True):
     category_id: int = Field(nullable=False, primary_key=True, unique=True)
     name: str = Field(index=True, nullable=False, unique=True)
     description: str = Field(index=True, nullable=False)
-    products: List["Product"] = Relationship(back_populates="categories", link_model=CategoryProductLink)
+    # products: List["Product"] = Relationship(back_populates="categories", link_model=CategoryProductLink)
