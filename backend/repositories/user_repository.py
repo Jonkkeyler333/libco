@@ -24,18 +24,19 @@ class UserRepository:
         statement = select(User).where(User.user_id == user_id)
         return self.session.exec(statement).first()
     
-    def create_user(self, username: str, email: str, name: str, last_name: str, password: str) -> User:
+    def create_user(self, username: str, email: str, ID: int, name: str, last_name: str, password: str) -> User:
         """Create a new user"""
-        # Generate unique ID (simple incrementing - in production use better method)
-        last_user = self.session.exec(select(User).order_by(User.ID.desc())).first()
-        new_id = (last_user.ID + 1) if last_user else 1
+        # Verificar que el ID no exista ya
+        existing_id = self.session.exec(select(User).where(User.ID == ID)).first()
+        if existing_id:
+            raise ValueError(f"El ID {ID} ya está en uso")
         
         user = User(
             username=username,
             email=email,
             name=name,
             last_name=last_name,
-            ID=new_id,
+            ID=ID,
             password_hash=get_password_hash(password)
         )
         

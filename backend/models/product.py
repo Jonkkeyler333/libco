@@ -1,4 +1,3 @@
-from __future__ import annotations
 from datetime import datetime , timezone
 from typing import List, TYPE_CHECKING
 from sqlmodel import SQLModel, Field, Relationship
@@ -8,12 +7,11 @@ from .category import Category, CategoryProductLink
 
 if TYPE_CHECKING:
     from .inventory import Inventory
-
     from .order import Order
 
 
 class Product(SQLModel, table=True):
-    __tablename__ = "product"
+    __tablename__ = "product"  # type: ignore[assignment]
     product_id: int = Field(primary_key=True)
     sku: str = Field(index=True, unique=True)
     title: str = Field(unique=True)
@@ -33,6 +31,6 @@ class Product(SQLModel, table=True):
     front_page_url: str | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    # inventory_product: "Inventory" = Relationship(back_populates="product")
-    # categories: List["Category"] = Relationship(back_populates="products", link_model=CategoryProductLink)
-    # orders: List["Order"] = Relationship(back_populates="products", link_model=OrderItem)
+    inventory_product: "Inventory" = Relationship(back_populates="product")
+    categories: List["Category"] = Relationship(back_populates="products", link_model=CategoryProductLink)
+    orders: List["Order"] = Relationship(back_populates="products", link_model=OrderItem)

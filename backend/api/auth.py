@@ -1,12 +1,13 @@
 # Authentication API endpoints
 from fastapi import APIRouter, Depends, HTTPException, status, Header
-from sqlmodel import Session
+from sqlmodel import Session, select
 from datetime import timedelta
 from typing import Optional
 
 from db.database import get_session
 from repositories.user_repository import UserRepository
 from services.auth_service import verify_password, create_access_token, verify_token
+from models.user import User
 from schemas.auth import (
     UserRegisterRequest, 
     UserLoginRequest, 
@@ -40,16 +41,30 @@ async def register_user(
             detail="El email ya está registrado"
         )
     
+        # Verificar si el ID ya existe
+    existing_id = session.exec(select(User).where(User.ID == user_data.ID)).first()
+    if existing_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"El ID {user_data.ID} ya está en uso"
+        )
+        
     # Crear el usuario
     try:
         user = user_repo.create_user(
             username=user_data.username,
             email=user_data.email,
+            ID=user_data.ID,
             name=user_data.name,
             last_name=user_data.last_name,
             password=user_data.password
         )
         return MessageResponse(message="Usuario registrado exitosamente")
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -99,11 +114,11 @@ async def login_user(
         expires_delta=access_token_expires
     )
     
-    # Preparar respuesta del usuario
     user_response = UserResponse(
         user_id=user.user_id,
         username=user.username,
         email=user.email,
+        ID=user.ID,
         name=user.name,
         last_name=user.last_name,
         role=user.role.value,
@@ -153,6 +168,7 @@ async def get_current_user(
             user_id=user.user_id,
             username=user.username,
             email=user.email,
+            ID=user.ID,
             name=user.name,
             last_name=user.last_name,
             role=user.role.value,

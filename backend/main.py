@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -5,10 +6,18 @@ from core.config import settings
 from api.auth import router as auth_router
 from db.database import create_db_and_tables
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    create_db_and_tables()
+    yield
+    # Shutdown (si necesitas hacer algo al cerrar)
+
 app = FastAPI(
     title=settings.app_name,
     description="API para la gestion de libros - LIBCO",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -21,11 +30,6 @@ app.add_middleware(
 
 # Incluir rutas de autenticación
 app.include_router(auth_router, prefix="/api")
-
-# Crear tablas al iniciar
-@app.on_event("startup")
-async def on_startup():
-    create_db_and_tables()
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root():

@@ -15,17 +15,18 @@ const AuthPage = () => {
     <div className="auth-page">
       <div className="auth-container">
         <div className="auth-header">
-          <h1>LibCo</h1>
+          <div className="logo-container">
+            <img src="/libco_logo.png" alt="LibCo Logo" className="logo-image" />
+            <h1>LibCo</h1>
+          </div>
           <p>Sistema de Gestión de Libros</p>
         </div>
 
-        <div className="auth-forms">
-          {isLogin ? (
-            <LoginForm onToggleForm={toggleForm} />
-          ) : (
-            <RegisterForm onToggleForm={toggleForm} />
-          )}
-        </div>
+        {isLogin ? (
+          <LoginForm onToggleForm={toggleForm} />
+        ) : (
+          <RegisterForm onToggleForm={toggleForm} />
+        )}
       </div>
     </div>
   );

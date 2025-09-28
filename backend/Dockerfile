@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-RUN apt-get update && apt-get install -y build-essential git wget \
+RUN apt-get update && apt-get install -y build-essential git wget netcat-traditional \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -15,4 +15,8 @@ ENV PIP_NO_CACHE_DIR=1
 
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Script to run migrations and start the app
+COPY backend/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+CMD ["/app/entrypoint.sh"]

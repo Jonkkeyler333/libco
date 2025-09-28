@@ -7,6 +7,7 @@ const RegisterForm = ({ onSuccess, onToggleForm }) => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
+    ID: '',
     name: '',
     last_name: '',
     password: '',
@@ -44,6 +45,12 @@ const RegisterForm = ({ onSuccess, onToggleForm }) => {
       newErrors.email = 'El email es requerido';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'El formato del email no es válido';
+    }
+    
+    if (!formData.ID) {
+      newErrors.ID = 'El número de identificación es requerido';
+    } else if (isNaN(formData.ID) || Number(formData.ID) <= 0) {
+      newErrors.ID = 'El número de identificación debe ser un número positivo';
     }
 
     if (!formData.name.trim()) {
@@ -84,6 +91,8 @@ const RegisterForm = ({ onSuccess, onToggleForm }) => {
     setLoading(true);
     try {
       const { confirmPassword, ...registerData } = formData;
+      // Convertir ID a número
+      registerData.ID = parseInt(registerData.ID, 10);
       await register(registerData);
       
       alert('Usuario registrado exitosamente. Ahora puedes iniciar sesión.');
@@ -93,6 +102,7 @@ const RegisterForm = ({ onSuccess, onToggleForm }) => {
       setFormData({
         username: '',
         email: '',
+        ID: '',
         name: '',
         last_name: '',
         password: '',
@@ -145,6 +155,23 @@ const RegisterForm = ({ onSuccess, onToggleForm }) => {
           />
           {errors.email && (
             <span className="error-message">{errors.email}</span>
+          )}
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="ID">Número de identificación:</label>
+          <input
+            type="number"
+            id="ID"
+            name="ID"
+            value={formData.ID}
+            onChange={handleChange}
+            className={errors.ID ? 'error' : ''}
+            disabled={loading}
+            min="1"
+          />
+          {errors.ID && (
+            <span className="error-message">{errors.ID}</span>
           )}
         </div>
 
