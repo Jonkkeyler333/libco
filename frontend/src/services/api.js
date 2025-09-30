@@ -10,3 +10,4 @@ export const apiClient = {
 export * from './authService';
 export * from './productService';
 export * from './orderService';
+export * from './inventoryService';

@@ -7,6 +7,7 @@ import { OrderProvider } from './context/OrderContext';
 import AuthPage from './pages/AuthPage';
 import Dashboard from './pages/Dashboard';
 import CreateOrderPage from './pages/CreateOrderPage';
+import InventoryPage from './pages/InventoryPage';
 
 // Componente para rutas protegidas que requieren autenticación
 const ProtectedRoute = ({ element }) => {
@@ -42,6 +43,7 @@ function AppContent() {
         <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <AuthPage />} />
         <Route path="/" element={<ProtectedRoute element={<Dashboard />} />} />
         <Route path="/crear-pedido" element={<ProtectedRoute element={<CreateOrderPage />} />} />
+        <Route path="/inventario" element={<ProtectedRoute element={<InventoryPage/>} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

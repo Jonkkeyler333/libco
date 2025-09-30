@@ -7,6 +7,7 @@ from core.config import settings
 from api.auth import router as auth_router
 from api.orders import router as orders_router
 from api.products import router as products_router
+from api.inventory import router as inventory_router
 from db.database import create_db_and_tables
 from db.seed import seed_database
 
@@ -37,6 +38,7 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/api")
 app.include_router(orders_router, prefix="/api")
 app.include_router(products_router, prefix="/api")
+app.include_router(inventory_router, prefix="/api")
 
 @app.get("/", response_class=HTMLResponse,tags=["Bienvenida"])
 async def read_root():

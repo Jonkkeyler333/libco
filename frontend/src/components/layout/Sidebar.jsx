@@ -48,6 +48,10 @@ const Sidebar = () => {
               <span className="nav-icon">📜</span>
               {!isCollapsed && <span className="nav-label">Historial de Pedidos</span>}
             </Link>
+            <Link to="/inventario" className={`nav-item ${location.pathname === '/inventario' ? 'active' : ''}`}>
+              <span className="nav-icon">📚</span>
+              {!isCollapsed && <span className="nav-label">Inventario de Productos</span>}
+            </Link>
           </nav>
         </div>
       </div>
