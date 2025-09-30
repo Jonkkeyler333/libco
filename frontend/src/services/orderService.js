@@ -31,8 +31,8 @@ export const orderService = {
     }
   },
   
-  // Get user's orders
-  async getUserOrders(token) {
+  // Get user's orders with pagination
+  async getUserOrders(userId, page = 1, pageSize = 10, token) {
     try {
       const headers = {};
       
@@ -40,17 +40,22 @@ export const orderService = {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      const response = await fetch(`${API_URL}/api/orders`, {
+      const url = new URL(`${API_URL}/api/users/${userId}/orders`);
+      url.searchParams.append('page', page.toString());
+      url.searchParams.append('page_size', pageSize.toString());
+      
+      const response = await fetch(url, {
         headers
       });
       
       if (!response.ok) {
-        throw new Error('Error al obtener pedidos');
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Error al obtener pedidos');
       }
       
       return await response.json();
     } catch (error) {
-      console.error('Error fetching user orders:', error);
+      console.error('Error getting user orders:', error);
       throw error;
     }
   },

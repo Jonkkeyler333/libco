@@ -12,7 +12,8 @@ from schemas.create_order import (
     OrdenStatus,
     CreateOrderResponse , 
     InsufficientStockError as InsufficientStockErrorSchema,
-    ProductNotFoundError as ProductNotFoundErrorSchema)
+    ProductNotFoundError as ProductNotFoundErrorSchema,
+    OrderListResponse)
 
 from services.auth_service import verify_token as verify_token_service
 from services.orders_service import (
@@ -23,6 +24,7 @@ from services.orders_service import (
     BusinessError,
     edit_order_item,
     get_order_details,
+    get_user_orders,
     InsufficientStockError,
     ProductNotFoundError
 )
@@ -208,3 +210,49 @@ def delete_order_item_endpoint(
         delete_order_item(session, order_id, item_id)
     except BusinessError as be:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(be))
+
+# US-06: Endpoint para listar pedidos del usuario
+@router.get("/user/{user_id}", response_model=OrderListResponse, tags=["Orders (Listar Pedidos)"])
+def get_user_orders_endpoint(
+    user_id: int,
+    page: int = 1,
+    page_size: int = 10,
+    session: Session = Depends(get_session),
+    current_user_id: int = Depends(verify_token)
+):
+    """
+    Listar todos los pedidos del usuario con paginación.
+    
+    - **user_id**: ID del usuario para obtener sus pedidos
+    - **page**: Número de página (default: 1)
+    - **page_size**: Número de pedidos por página (default: 10, max: 50)
+    """
+    # Validar que el usuario solo pueda ver sus propios pedidos (o ser admin)
+    if current_user_id != user_id:
+        # TODO: Verificar si el usuario actual es admin
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permisos para ver los pedidos de otro usuario"
+        )
+    
+    # Validar parámetros de paginación
+    if page < 1:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El número de página debe ser mayor a 0"
+        )
+    
+    if page_size < 1 or page_size > 50:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El tamaño de página debe estar entre 1 y 50"
+        )
+    
+    try:
+        result = get_user_orders(session, user_id, page, page_size)
+        return OrderListResponse(**result)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener los pedidos: {str(e)}"
+        )

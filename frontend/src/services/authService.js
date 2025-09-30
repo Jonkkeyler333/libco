@@ -80,6 +80,11 @@ export const authService = {
     const userData = localStorage.getItem('user_data');
     return userData ? JSON.parse(userData) : null;
   },
+
+  // Get stored token
+  getToken: () => {
+    return localStorage.getItem('auth_token');
+  },
 };
 
 export default authService;

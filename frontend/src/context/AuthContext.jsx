@@ -64,6 +64,8 @@ export const AuthProvider = ({ children }) => {
 
   const isAdmin = () => user?.role === 'admin';
 
+  const getToken = () => authService.getToken();
+
   const value = {
     user,
     isAuthenticated,
@@ -73,6 +75,7 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     isAdmin,
+    token: getToken(),
   };
 
   return (

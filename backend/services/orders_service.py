@@ -214,3 +214,43 @@ def delete_order_item(session: Session , order_id : int , product_id : int ) -> 
     order.total = total
     order=order_repo.update_order_status(order_id,'draft')
     return True
+
+def get_user_orders(session: Session, user_id: int, page: int = 1, page_size: int = 10) -> dict:
+    """Get paginated list of orders for a user"""
+    import math
+    
+    order_repo = OrderRepository(session)
+    
+    # Calculate offset
+    offset = (page - 1) * page_size
+    
+    # Get orders and total count
+    orders = order_repo.get_orders_by_user(user_id, limit=page_size, offset=offset)
+    total_orders = order_repo.count_orders_by_user(user_id)
+    
+    # Calculate pagination info
+    total_pages = math.ceil(total_orders / page_size) if total_orders > 0 else 0
+    has_next = page < total_pages
+    has_previous = page > 1
+    
+    # Build order list with item counts
+    order_list = []
+    for order in orders:
+        order_items = order_repo.get_order_items(order.order_id) # type: ignore
+        order_list.append({
+            "order_id": order.order_id,
+            "status": order.status,
+            "total": order.total,
+            "created_at": order.created_at,
+            "items_count": len(order_items)
+        })
+    
+    return {
+        "orders": order_list,
+        "total_orders": total_orders,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages,
+        "has_next": has_next,
+        "has_previous": has_previous
+    }

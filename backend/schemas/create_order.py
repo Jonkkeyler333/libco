@@ -124,3 +124,62 @@ class EditOrderItemRequest(BaseModel):
         schema_extra={"example": 
                 {"quantity": 3}
             }
+
+class OrderListItemResponse(BaseModel):
+    """Response model for an order in the user's order list.
+    """
+    order_id: int
+    status: OrdenStatus
+    total: float = Field(gt=0)
+    created_at: datetime
+    items_count: int = Field(..., description="Total number of items in the order", gt=0)
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "order_id": 1,
+                "status": "completed",
+                "total": 45.97,
+                "created_at": "2024-01-15T10:30:00Z",
+                "items_count": 3
+            }
+        }
+
+class OrderListResponse(BaseModel):
+    """Response model for paginated user order list.
+    """
+    orders: List[OrderListItemResponse] = Field(..., description="List of user orders")
+    total_orders: int = Field(..., description="Total number of orders for the user", ge=0)
+    page: int = Field(..., description="Current page number", gt=0)
+    page_size: int = Field(..., description="Number of orders per page", gt=0)
+    total_pages: int = Field(..., description="Total number of pages", ge=0)
+    has_next: bool = Field(..., description="Whether there are more pages")
+    has_previous: bool = Field(..., description="Whether there are previous pages")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "orders": [
+                    {
+                        "order_id": 1,
+                        "status": "completed",
+                        "total": 45.97,
+                        "created_at": "2024-01-15T10:30:00Z",
+                        "items_count": 3
+                    },
+                    {
+                        "order_id": 2,
+                        "status": "check",
+                        "total": 28.98,
+                        "created_at": "2024-01-14T09:15:00Z",
+                        "items_count": 2
+                    }
+                ],
+                "total_orders": 15,
+                "page": 1,
+                "page_size": 10,
+                "total_pages": 2,
+                "has_next": True,
+                "has_previous": False
+            }
+        }

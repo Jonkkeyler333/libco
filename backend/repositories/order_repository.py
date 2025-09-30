@@ -67,6 +67,13 @@ class OrderRepository:
         )
         return list(self.session.exec(statement).all())
     
+    def count_orders_by_user(self, user_id: int) -> int:
+        """Count total orders for a user"""
+        from sqlalchemy import func
+        statement = select(func.count(Order.order_id)).where(Order.user_created == user_id)
+        result = self.session.exec(statement).first()
+        return result or 0
+    
     def update_order_item(self,order_id:int,product_id:int, new_quantity:int) -> Optional[OrderItem]:
         statement = select(OrderItem).where(
             OrderItem.order_id == order_id,
