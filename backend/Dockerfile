@@ -17,6 +17,8 @@ EXPOSE 8000
 
 # Script to run migrations and start the app
 COPY backend/entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh && \
+    # Asegurarse de que el archivo tenga formato Unix
+    sed -i 's/\r$//' /app/entrypoint.sh
 
-CMD ["/app/entrypoint.sh"]
+CMD ["/bin/bash", "/app/entrypoint.sh"]

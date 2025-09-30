@@ -1,4 +1,3 @@
-# Authentication API endpoints
 from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlmodel import Session, select
 from datetime import timedelta

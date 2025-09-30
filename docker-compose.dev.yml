@@ -21,6 +21,7 @@ services:
       dockerfile: backend/Dockerfile
     volumes:
       - ./backend:/app
+      - ./backend/entrypoint.sh:/app/entrypoint.sh
     env_file:
       - .env
     depends_on:
@@ -42,6 +43,7 @@ services:
       - "5173:5173"
     depends_on:
       - backend
+    command: sh -c "npm ci && npm run dev -- --host 0.0.0.0"
 
 volumes:
   db_data:

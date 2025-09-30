@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 class Inventory(SQLModel, table=True):
     __tablename__ = "inventory"  # type: ignore[assignment]
-    inventory_id: int = Field(primary_key=True)
+    inventory_id: int | None = Field(default=None, primary_key=True)
     product_id: int = Field(foreign_key="product.product_id", index=True)
     quantity: int = Field(default=0, ge=0)
     reserved: int = Field(default=0, ge=0)

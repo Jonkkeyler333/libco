@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 class AuditLog(SQLModel, table=True):
     __tablename__ = "audit_log"  # type: ignore[assignment]
-    audit_log_id: int = Field(primary_key=True)
+    audit_log_id: int | None = Field(default=None, primary_key=True)
     actor_id: int = Field(foreign_key="user.user_id")
     action: str = Field(default="create")
     object_type: str = Field(default="create")

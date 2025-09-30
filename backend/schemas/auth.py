@@ -1,15 +1,13 @@
-# Authentication schemas for request/response models
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
 from datetime import datetime
 
 class UserRegisterRequest(BaseModel):
-    username: str = Field(min_length=3, max_length=50)
+    username: str = Field(..., min_length=3, max_length=50)
     email: EmailStr
-    ID: int = Field(gt=0)  # Aseguramos que ID sea positivo
-    name: str = Field(min_length=2, max_length=100)
-    last_name: str = Field(min_length=2, max_length=100)
-    password: str = Field(min_length=6, max_length=100)
+    ID: int = Field(..., gt=0)
+    name: str = Field(..., min_length=2, max_length=100)
+    last_name: str = Field(..., min_length=2, max_length=100)
+    password: str = Field(..., min_length=6, max_length=100)
 
 class UserLoginRequest(BaseModel):
     username: str

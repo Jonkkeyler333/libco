@@ -165,26 +165,20 @@ export const OrderProvider = ({ children }) => {
   const submitOrder = async (token) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/orders`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          items: state.currentOrder.items,
-          total: state.currentOrder.total
-        })
-      });
-
-      if (response.ok) {
-        const newOrder = await response.json();
-        dispatch({ type: 'ADD_ORDER', payload: newOrder });
-        return newOrder;
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al crear el pedido');
-      }
+      // Import dynamically to avoid circular dependency
+      const { orderService } = await import('../services/orderService');
+      
+      // Formatear los datos según lo esperado por la API
+      const orderData = {
+        items: state.currentOrder.items.map(item => ({
+          product_id: item.product_id,
+          quantity: item.quantity
+        }))
+      };
+      
+      const newOrder = await orderService.createOrder(orderData, token);
+      dispatch({ type: 'ADD_ORDER', payload: newOrder });
+      return newOrder;
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error.message });
       throw error;
@@ -196,18 +190,11 @@ export const OrderProvider = ({ children }) => {
   const fetchOrders = async (token) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/orders`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        const orders = await response.json();
-        dispatch({ type: 'SET_ORDERS', payload: orders });
-      } else {
-        throw new Error('Error al cargar los pedidos');
-      }
+      // Import dynamically to avoid circular dependency
+      const { orderService } = await import('../services/orderService');
+      
+      const orders = await orderService.getUserOrders(token);
+      dispatch({ type: 'SET_ORDERS', payload: orders });
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error.message });
     } finally {
@@ -218,18 +205,11 @@ export const OrderProvider = ({ children }) => {
   const cancelOrder = async (orderId, token) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/orders/${orderId}/cancel`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        dispatch({ type: 'UPDATE_ORDER_STATUS', payload: { order_id: orderId, status: 'cancelled' } });
-      } else {
-        throw new Error('Error al cancelar el pedido');
-      }
+      // Import dynamically to avoid circular dependency
+      const { orderService } = await import('../services/orderService');
+      
+      await orderService.cancelOrder(orderId, token);
+      dispatch({ type: 'UPDATE_ORDER_STATUS', payload: { order_id: orderId, status: 'cancelled' } });
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error.message });
       throw error;

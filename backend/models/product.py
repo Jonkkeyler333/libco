@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 class Product(SQLModel, table=True):
     __tablename__ = "product"  # type: ignore[assignment]
-    product_id: int = Field(primary_key=True)
+    product_id: int | None = Field(default=None, primary_key=True)
     sku: str = Field(index=True, unique=True)
     title: str = Field(unique=True)
     author: str = Field(index=True)

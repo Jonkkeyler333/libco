@@ -1,4 +1,3 @@
-# User repository for database operations
 from sqlmodel import Session, select
 from typing import Optional
 from models.user import User
@@ -26,7 +25,6 @@ class UserRepository:
     
     def create_user(self, username: str, email: str, ID: int, name: str, last_name: str, password: str) -> User:
         """Create a new user"""
-        # Verificar que el ID no exista ya
         existing_id = self.session.exec(select(User).where(User.ID == ID)).first()
         if existing_id:
             raise ValueError(f"El ID {ID} ya está en uso")

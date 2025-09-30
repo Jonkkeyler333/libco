@@ -2,14 +2,19 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+
 from core.config import settings
 from api.auth import router as auth_router
+from api.orders import router as orders_router
+from api.products import router as products_router
 from db.database import create_db_and_tables
+from db.seed import seed_database
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     create_db_and_tables()
+    seed_database()  # Sembrar la base de datos
     yield
     # Shutdown (si necesitas hacer algo al cerrar)
 
@@ -28,10 +33,12 @@ app.add_middleware(
     allow_headers=settings.CORS_ALLOW_HEADERS,
 )
 
-# Incluir rutas de autenticación
+# Rutas
 app.include_router(auth_router, prefix="/api")
+app.include_router(orders_router, prefix="/api")
+app.include_router(products_router, prefix="/api")
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse,tags=["Bienvenida"])
 async def read_root():
     return """
     <html>
