@@ -112,7 +112,22 @@ const orderReducer = (state, action) => {
       return {
         ...state,
         error: action.payload,
-        isLoading: false
+        isLoading: false,
+        isValidating: false
+      };
+    
+    case 'START_VALIDATION':
+      return {
+        ...state,
+        isValidating: true,
+        validationResult: null
+      };
+      
+    case 'VALIDATION_COMPLETE':
+      return {
+        ...state,
+        isValidating: false,
+        validationResult: action.payload
       };
 
     default:
@@ -129,6 +144,8 @@ const initialOrderState = {
   },
   orders: [],
   isLoading: false,
+  isValidating: false,
+  validationResult: null,
   error: null
 };
 
@@ -178,7 +195,13 @@ export const OrderProvider = ({ children }) => {
       
       const newOrder = await orderService.createOrder(orderData, token);
       dispatch({ type: 'ADD_ORDER', payload: newOrder });
-      return newOrder;
+      
+      // Iniciamos el proceso de validación automáticamente
+      dispatch({ type: 'START_VALIDATION' });
+      const validatedOrder = await validateOrder(newOrder.order_id, token);
+      dispatch({ type: 'VALIDATION_COMPLETE', payload: validatedOrder });
+      
+      return { order: newOrder, validation: validatedOrder };
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error.message });
       throw error;
@@ -186,6 +209,30 @@ export const OrderProvider = ({ children }) => {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
+
+  const validateOrder = async (orderId, token) => {
+    dispatch({ type: 'SET_LOADING', payload: true });
+    try {
+      // Import dynamically to avoid circular dependency
+      const { orderService } = await import('../services/orderService');
+      
+      // Simulación de procesamiento (5 segundos)
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      
+      const validatedOrder = await orderService.validateOrder(orderId, token);
+      dispatch({ type: 'UPDATE_ORDER_STATUS', payload: { 
+        order_id: orderId, 
+        status: validatedOrder.status 
+      }});
+      return validatedOrder;
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: error.message });
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  }
+
 
   const fetchOrders = async (token) => {
     dispatch({ type: 'SET_LOADING', payload: true });
@@ -229,6 +276,7 @@ export const OrderProvider = ({ children }) => {
     updateQuantity,
     clearCart,
     submitOrder,
+    validateOrder,
     fetchOrders,
     cancelOrder,
     getCartItemsCount

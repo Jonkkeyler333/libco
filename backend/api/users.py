@@ -35,20 +35,6 @@ def get_user_orders_endpoint(
     session: Session = Depends(get_session),
     current_user_id: int = Depends(verify_token)
 ):
-    """
-    **US-06: Listar Pedidos (usuario)**
-    
-    Obtiene el historial paginado de pedidos de un usuario específico.
-    
-    - **user_id**: ID del usuario para obtener sus pedidos
-    - **page**: Número de página (default: 1, mínimo: 1)
-    - **page_size**: Número de pedidos por página (default: 10, rango: 1-50)
-    
-    **Retorna:**
-    - Lista paginada de pedidos del usuario
-    - Información de paginación (total, páginas, navegación)
-    - Cada pedido incluye: ID, estado, total, fecha, cantidad de artículos
-    """
     # Validar que el usuario solo pueda ver sus propios pedidos
     if current_user_id != user_id:
         # TODO: En el futuro, permitir a admins ver pedidos de cualquier usuario

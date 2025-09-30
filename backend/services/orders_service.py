@@ -3,11 +3,11 @@ from repositories.order_repository import OrderRepository
 from repositories.product_repository import ProductRepository
 from repositories.inventory_repository import InventoryRepository
 from models.order import Order, OrderItem
+import math
 from models.product import Product
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Tuple, TypedDict
 
-# Definir una estructura para los detalles de items
 class OrderItemDetail(TypedDict):
     order_item_id: int
     product_id: int
@@ -216,24 +216,13 @@ def delete_order_item(session: Session , order_id : int , product_id : int ) -> 
     return True
 
 def get_user_orders(session: Session, user_id: int, page: int = 1, page_size: int = 10) -> dict:
-    """Get paginated list of orders for a user"""
-    import math
-    
     order_repo = OrderRepository(session)
-    
-    # Calculate offset
     offset = (page - 1) * page_size
-    
-    # Get orders and total count
     orders = order_repo.get_orders_by_user(user_id, limit=page_size, offset=offset)
     total_orders = order_repo.count_orders_by_user(user_id)
-    
-    # Calculate pagination info
     total_pages = math.ceil(total_orders / page_size) if total_orders > 0 else 0
     has_next = page < total_pages
     has_previous = page > 1
-    
-    # Build order list with item counts
     order_list = []
     for order in orders:
         order_items = order_repo.get_order_items(order.order_id) # type: ignore

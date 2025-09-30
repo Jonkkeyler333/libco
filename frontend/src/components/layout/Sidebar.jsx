@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 const Sidebar = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
   
@@ -36,22 +36,42 @@ const Sidebar = () => {
               <span className="nav-icon">📊</span>
               {!isCollapsed && <span className="nav-label">Panel Principal</span>}
             </Link>
-            <Link to="/crear-pedido" className={`nav-item ${location.pathname === '/crear-pedido' ? 'active' : ''}`}>
-              <span className="nav-icon">🛒</span>
-              {!isCollapsed && <span className="nav-label">Crear Pedido</span>}
-            </Link>
-            <Link to="/mis-pedidos" className={`nav-item ${location.pathname === '/mis-pedidos' ? 'active' : ''}`}>
-              <span className="nav-icon">📦</span>
-              {!isCollapsed && <span className="nav-label">Gestionar mis Pedidos</span>}
-            </Link>
-            <Link to="/historial" className={`nav-item ${location.pathname === '/historial' ? 'active' : ''}`}>
-              <span className="nav-icon">📜</span>
-              {!isCollapsed && <span className="nav-label">Historial de Pedidos</span>}
-            </Link>
-            <Link to="/inventario" className={`nav-item ${location.pathname === '/inventario' ? 'active' : ''}`}>
-              <span className="nav-icon">📚</span>
-              {!isCollapsed && <span className="nav-label">Inventario de Productos</span>}
-            </Link>
+            
+            {/* Opciones solo para clientes (no admin) */}
+            {!isAdmin() && (
+              <>
+                <Link to="/crear-pedido" className={`nav-item ${location.pathname === '/crear-pedido' ? 'active' : ''}`}>
+                  <span className="nav-icon">🛒</span>
+                  {!isCollapsed && <span className="nav-label">Crear Pedido</span>}
+                </Link>
+                <Link to="/mis-pedidos" className={`nav-item ${location.pathname === '/mis-pedidos' ? 'active' : ''}`}>
+                  <span className="nav-icon">📦</span>
+                  {!isCollapsed && <span className="nav-label">Gestionar mis Pedidos</span>}
+                </Link>
+                <Link to="/historial" className={`nav-item ${location.pathname === '/historial' ? 'active' : ''}`}>
+                  <span className="nav-icon">📜</span>
+                  {!isCollapsed && <span className="nav-label">Historial de Pedidos</span>}
+                </Link>
+              </>
+            )}
+            
+            {/* Opciones solo para administradores */}
+            {isAdmin() && (
+              <>
+                <Link to="/inventario" className={`nav-item ${location.pathname === '/inventario' ? 'active' : ''}`}>
+                  <span className="nav-icon">📚</span>
+                  {!isCollapsed && <span className="nav-label">Inventario de Productos</span>}
+                </Link>
+                <Link to="/reportes" className={`nav-item ${location.pathname === '/reportes' ? 'active' : ''}`}>
+                  <span className="nav-icon">📊</span>
+                  {!isCollapsed && <span className="nav-label">Reportes</span>}
+                </Link>
+                <Link to="/usuarios" className={`nav-item ${location.pathname === '/usuarios' ? 'active' : ''}`}>
+                  <span className="nav-icon">👥</span>
+                  {!isCollapsed && <span className="nav-label">Gestión de Usuarios</span>}
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       </div>

@@ -1,0 +1,114 @@
+.validation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.validation-container {
+  background-color: white;
+  border-radius: 8px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
+
+.validation-container.success {
+  border-top: 5px solid #4CAF50;
+}
+
+.validation-container.warning {
+  border-top: 5px solid #FF9800;
+}
+
+.validation-container.error {
+  border-top: 5px solid #F44336;
+}
+
+.success-icon, .warning-icon, .error-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.success-icon {
+  color: #4CAF50;
+}
+
+.warning-icon {
+  color: #FF9800;
+}
+
+.error-icon {
+  color: #F44336;
+}
+
+.validation-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.confirm-button, .edit-button, .confirm-anyway-button, .return-button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.confirm-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+}
+
+.edit-button {
+  background-color: white;
+  color: #333;
+  border: 1px solid #ccc;
+}
+
+.confirm-anyway-button {
+  background-color: #FF9800;
+  color: white;
+  border: none;
+}
+
+.return-button {
+  background-color: #F44336;
+  color: white;
+  border: none;
+}
+
+.error-details {
+  background-color: #f8f8f8;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.loading-spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top: 4px solid #3498db;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1.5rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

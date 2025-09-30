@@ -3,22 +3,31 @@ import { useAuth } from '../context/AuthContext';
 import { useOrder } from '../context/OrderContext';
 import Sidebar from '../components/layout/Sidebar';
 import Header from '../components/layout/Header';
+import { OrderValidation } from '../components/ui';
 import { productService } from '../services/productService';
-import { orderService } from '../services/orderService';
 import '../styles/CreateOrder.css';
 
 const CreateOrderPage = () => {
   const { user } = useAuth();
-  const { currentOrder, addToCart, removeFromCart, updateQuantity, clearCart, submitOrder } = useOrder();
+  const { 
+    currentOrder, 
+    addToCart, 
+    removeFromCart, 
+    updateQuantity, 
+    clearCart, 
+    submitOrder, 
+    isLoading,
+    isValidating,
+    validationResult,
+    error: contextError
+  } = useOrder();
   
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [cartItems, setCartItems] = useState([]);
-  const [orderSubmitting, setOrderSubmitting] = useState(false);
-  const [orderSuccess, setOrderSuccess] = useState(null);
-  const [orderError, setOrderError] = useState(null);
+  const [submittedOrderId, setSubmittedOrderId] = useState(null);
 
   // Cargar productos cuando el componente se monta
   useEffect(() => {
@@ -45,6 +54,13 @@ const CreateOrderPage = () => {
       setCartItems(currentOrder.items);
     }
   }, [currentOrder]);
+  
+  // Mostrar el mensaje de error del contexto si existe
+  useEffect(() => {
+    if (contextError) {
+      setError(contextError);
+    }
+  }, [contextError]);
 
   // Filtrar productos basados en el término de búsqueda
   const filteredProducts = products.filter(product =>
@@ -75,8 +91,7 @@ const CreateOrderPage = () => {
   // Manejar el envío del pedido
   const handleSubmitOrder = async () => {
     try {
-      setOrderSubmitting(true);
-      setOrderError(null);
+      setError(null);
       
       // Obtener el token de autenticación
       const token = localStorage.getItem('auth_token');
@@ -84,14 +99,14 @@ const CreateOrderPage = () => {
       // Usar directamente el método submitOrder del contexto
       const result = await submitOrder(token);
       
-      // Guardar el resultado exitoso
-      setOrderSuccess(result);
+      // Guardar el ID del pedido para mostrar la validación
+      if (result && result.order && result.order.order_id) {
+        setSubmittedOrderId(result.order.order_id);
+      }
       
-    } catch (error) {
-      console.error('Error creating order:', error);
-      setOrderError(error.message || 'Error al crear el pedido');
-    } finally {
-      setOrderSubmitting(false);
+    } catch (err) {
+      console.error('Error creating order:', err);
+      setError(err.message || 'Error al crear el pedido');
     }
   };
 
@@ -243,41 +258,35 @@ const CreateOrderPage = () => {
                   <button
                     className="clear-cart-btn"
                     onClick={clearCart}
-                    disabled={orderSubmitting}
+                    disabled={isLoading || isValidating}
                   >
                     Limpiar Carrito
                   </button>
                   <button
                     className="submit-order-btn"
                     onClick={handleSubmitOrder}
-                    disabled={cartItems.length === 0 || orderSubmitting}
+                    disabled={cartItems.length === 0 || isLoading || isValidating}
                   >
-                    {orderSubmitting ? 'Procesando...' : 'Realizar Pedido'}
+                    {isLoading ? 'Procesando...' : 'Realizar Pedido'}
                   </button>
                 </div>
               </>
             )}
             
-            {/* Mensaje de éxito o error */}
-            {orderSuccess && (
-              <div className="order-success">
-                <h3>¡Pedido realizado con éxito!</h3>
-                <p>Número de pedido: {orderSuccess.order_id}</p>
-                <p>Estado: {orderSuccess.status}</p>
-                <p>Total: ${orderSuccess.total.toFixed(2)}</p>
-                <p>{orderSuccess.message}</p>
-                <p>Siguiente paso: {orderSuccess.next_step}</p>
-              </div>
-            )}
-            
-            {orderError && (
+            {/* Mensaje de error */}
+            {error && (
               <div className="order-error">
                 <h3>Error al procesar el pedido</h3>
-                <p>{orderError}</p>
+                <p>{error}</p>
               </div>
             )}
           </div>
         </div>
+        
+        {/* Mostrar el componente de validación cuando sea necesario */}
+        {(isValidating || validationResult) && submittedOrderId && (
+          <OrderValidation orderId={submittedOrderId} />
+        )}
       </main>
     </div>
   );

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate, Link } from 'react-router-dom';
 import { orderService } from '../services/orderService';
 import '../styles/OrderHistory.css';
 
 const OrderHistoryPage = () => {
   const { user, token } = useAuth();
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -65,8 +67,8 @@ const OrderHistoryPage = () => {
 
   const getStatusDisplay = (status) => {
     const statusMap = {
-      'draft': 'En Revisión',
-      'check': 'En Revisión', 
+      'draft': 'En Revisión 🔜',
+      'check': 'Revisado ✔️', 
       'completed': 'Confirmado',
       'canceled': 'Cancelado'
     };
@@ -96,6 +98,14 @@ const OrderHistoryPage = () => {
   return (
     <div className="order-history-page">
       <div className="order-history-header">
+        <div className="flex items-center mb-3">
+          <button 
+            onClick={() => navigate('/')}
+            className="back-button"
+          >
+            <span style={{marginRight: '8px'}}>←</span> Volver al Dashboard
+          </button>
+        </div>
         <h1>📦 Historial de Pedidos</h1>
         <p className="subtitle" style={{color: '#2d3748'}}>Revisa tus pedidos anteriores y su estado actual</p>
       </div>
@@ -114,7 +124,10 @@ const OrderHistoryPage = () => {
           {orders.length === 0 ? (
             <div className="no-orders">
               <p>📋 No tienes pedidos registrados aún.</p>
-              <button className="create-order-button">
+              <button 
+                className="create-order-button"
+                onClick={() => navigate('/crear-pedido')}
+              >
                 🛒 Crear mi primer pedido
               </button>
             </div>

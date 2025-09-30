@@ -1,0 +1,129 @@
+body {
+  background-color: #ffffff !important;
+}
+
+/* Welcome section clean style */
+.welcome-section {
+  background: white !important;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.welcome-section h2 {
+  color: var(--text-dark);
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 0.5rem;
+  display: inline-block;
+}
+
+/* Stats card clean styles */
+.stats-card {
+  background: white !important;
+  border: 1px solid var(--border-color);
+}
+
+.stats-card.primary,
+.stats-card.secondary,
+.stats-card.accent {
+  background: white !important;
+}
+
+.stats-card.primary .stats-icon {
+  background-color: rgba(102, 126, 234, 0.15);
+  color: var(--primary-color);
+}
+
+.stats-card.primary {
+  border-left: 4px solid var(--primary-color);
+}
+
+.stats-card.secondary .stats-icon {
+  background-color: rgba(118, 75, 162, 0.15);
+  color: var(--secondary-color);
+}
+
+.stats-card.secondary {
+  border-left: 4px solid var(--secondary-color);
+}
+
+.stats-card.accent .stats-icon {
+  background-color: rgba(243, 156, 18, 0.15);
+  color: var(--accent-color);
+}
+
+.stats-card.accent {
+  border-left: 4px solid var(--accent-color);
+}
+
+/* Dashboard layout clean style */
+.dashboard-layout {
+  background-color: #ffffff !important;
+}
+
+/* Remove gradient from auth page */
+.auth-page {
+  background: white !important;
+}
+
+.auth-header {
+  background: var(--primary-color) !important;
+}
+
+/* Clean header style */
+.main-header {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background-color: white !important;
+}
+
+/* Clean product section style */
+.product-section {
+  background-color: white !important;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+}
+
+.section-header {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Clean dashboard container */
+.dashboard-container {
+  background-color: #ffffff !important;
+}
+
+/* Clean main content */
+.main-content {
+  background-color: #ffffff !important;
+}
+
+/* Clean product card style */
+.product-card {
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease-in-out;
+}
+
+.product-card:hover {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+/* Clean sidebar */
+.sidebar {
+  background: white !important;
+  border-right: 1px solid var(--border-color);
+}
+
+/* Loading container */
+.loading-container {
+  background: white !important;
+}
+
+/* Dashboard header title */
+.dashboard-header h1 {
+  color: var(--text-dark) !important;
+  -webkit-text-fill-color: var(--text-dark) !important;
+  background: none !important;
+}
