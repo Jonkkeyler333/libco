@@ -76,13 +76,29 @@ class CreateOrderResponse(BaseModel):
                 "next_step": "Confirm order"
             }
         }
+        
+class CancelOrderResponse(BaseModel):
+    """Response model for an order cancellation.
+    """
+    order_id: int
+    status: OrdenStatus = Field(default=OrdenStatus.CANCELED)
+    message: str = Field(..., description="Order cancellation message")
+    next_step: str = Field(default="N/A",description="Next step in the order process")
+    class Config:
+        schema_extra = {
+            "example": {
+                "order_id": 1,
+                "status": "canceled",
+                "message": "Order canceled successfully"
+            }
+        }
 
 class InsufficientStockError(BaseModel):
     """Error model for insufficient stock when creating an order.
     """
     detail: str
     error_code: str = "INSUFFICIENT_STOCK"
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description="Timestamp of the error occurrence") # type: ignore
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Timestamp of the error occurrence")
     available_stock: dict = Field(..., description="Información del stock disponible")
     class Config:
         schema_extra = {
@@ -104,7 +120,7 @@ class ProductNotFoundError(BaseModel):
     """
     detail: str
     error_code: str = "PRODUCT_NOT_FOUND"
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description="Timestamp of the error occurrence") # type: ignore
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Timestamp of the error occurrence")
     product_id: int
     class Config:
         schema_extra = {
@@ -130,9 +146,9 @@ class OrderListItemResponse(BaseModel):
     """
     order_id: int
     status: OrdenStatus
-    total: float = Field(gt=0)
+    total: float = Field(ge=0)
     created_at: datetime
-    items_count: int = Field(..., description="Total number of items in the order", gt=0)
+    items_count: int = Field(..., description="Total number of items in the order", ge=0)
     
     class Config:
         schema_extra = {

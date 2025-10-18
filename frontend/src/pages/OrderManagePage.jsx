@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
+import { useOrder } from '../context/OrderContext';
 import { orderService } from '../services/orderService';
+import OrderDetailsModal from '../components/ui/OrderDetailsModal';
+import ConfirmationModal from '../components/ui/ConfirmationModal';
 import '../styles/OrderHistory.css';
 
-const OrderHistoryPage = () => {
+const OrderManagePage = () => {
   const { user, token } = useAuth();
+  const { confirmOrder, isLoading, cancelOrder, error: contextError } = useOrder();
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,6 +23,13 @@ const OrderHistoryPage = () => {
     has_next: false,
     has_previous: false
   });
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  
+  // Estados para los modales de confirmación
+  const [showConfirmOrderModal, setShowConfirmOrderModal] = useState(false);
+  const [showCancelOrderModal, setShowCancelOrderModal] = useState(false);
+  const [actionOrderId, setActionOrderId] = useState(null);
 
   const loadOrders = async (page = 1) => {
     if (!user || !token) return;
@@ -69,8 +80,8 @@ const OrderHistoryPage = () => {
     const statusMap = {
       'draft': 'En Revisión 🔜',
       'check': 'Revisado ✔️', 
-      'completed': 'Confirmado ✅',
-      'canceled': 'Cancelado ❌'
+      'completed': 'Confirmado',
+      'canceled': 'Cancelado'
     };
     return statusMap[status] || status;
   };
@@ -83,6 +94,52 @@ const OrderHistoryPage = () => {
       'canceled': 'status-canceled'
     };
     return statusClasses[status] || 'status-default';
+  };
+
+  const handleViewDetails = (orderId) => {
+    setSelectedOrderId(orderId);
+    setShowDetailsModal(true);
+  };
+
+  const handleCloseDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedOrderId(null);
+  };
+
+  const handleOpenConfirmModal = (orderId) => {
+    setActionOrderId(orderId);
+    setShowConfirmOrderModal(true);
+  };
+  
+  const handleOpenCancelModal = (orderId) => {
+    setActionOrderId(orderId);
+    setShowCancelOrderModal(true);
+  };
+
+  const handleConfirmOrder = async (orderId) => {
+    try {
+      setLoading(true);
+      await confirmOrder(orderId, token);
+      setLoading(false);
+      loadOrders(currentPage);
+    } catch (err) {
+      setError(contextError);
+      console.error('Error confirming order:', err);
+      setLoading(false);
+    }
+  };
+
+  const handleCancelOrder = async (orderId) => {
+    try {
+      setLoading(true);
+      await cancelOrder(orderId, token);
+      setLoading(false);
+      loadOrders(currentPage);
+    } catch (err) {
+      setError(contextError);
+      console.error('Error canceling order:', err);
+      setLoading(false);
+    }
   };
 
   if (loading && currentPage === 1) {
@@ -106,25 +163,22 @@ const OrderHistoryPage = () => {
             <span style={{marginRight: '8px'}}>←</span> Volver al Dashboard
           </button>
         </div>
-        <h1>📦 Historial de Pedidos</h1>
-        <p className="subtitle" style={{color: '#2d3748'}}>Revisa tus pedidos anteriores</p>
-        <p>Aqui encontraras tus pedidos cancelados o confirmados</p>
+        <h1>📦 Gestión de Pedidos</h1>
+        <p className="subtitle" style={{color: '#2d3748'}}>Revisa tus pedios en curso , edita , confirma o cancela</p>
       </div>
-
       {error && (
         <div className="error-message">
-          <p>Error: {error}</p>
+          <p>Error: Tu {error} , debes editar tu pedido ya que hay productos con stock insuficiente para tu pedido 😩    </p>
           <button onClick={() => loadOrders(currentPage)} className="retry-button">
             Reintentar
           </button>
         </div>
       )}
-
       {!error && (
         <>
-          {orders.filter(order => order.status === 'completed' || order.status === 'canceled').length === 0 ? (
+          {orders.filter(order => order.status === 'check' || order.status === 'draft').length === 0 ? (
             <div className="no-orders">
-              <p>📋 No tienes pedidos por aca aún 🫢</p>
+              <p>📋 No tienes pedidos registrados aún.</p>
               <button 
                 className="create-order-button"
                 onClick={() => navigate('/crear-pedido')}
@@ -135,7 +189,7 @@ const OrderHistoryPage = () => {
           ) : (
             <>
               <div className="orders-list">
-                {orders.filter(order => order.status === 'completed' || order.status === 'canceled').map((order) => (
+                {orders.filter(order => order.status === 'check' || order.status === 'draft').map((order) => (
                   <div key={order.order_id} className="order-card">
                     <div className="order-header">
                       <div className="order-id">
@@ -156,14 +210,27 @@ const OrderHistoryPage = () => {
                         <p className="items-count">{order.items_count} artículos</p>
                         <p className="order-total">{formatPrice(order.total)}</p>
                       </div>
-                      {order.status === 'canceled' && (
-                        <div className="order-cancellation">
-                          <p>🛑 Pedido Cancelado</p>
-                        </div>
-                      )}
-                      <div className="order-actions">
-                        <button className="view-details-button">
-                          📄 Ver Orden de Pedido
+                      <div className="order-actions-grid">
+                        <button 
+                          className="action-button details-button"
+                          onClick={() => handleViewDetails(order.order_id)}
+                        >
+                          📃 Ver Detalles del Pedido
+                        </button>
+                        <button className="action-button cancel-button"
+                          onClick={() => handleOpenCancelModal(order.order_id)}
+                          disabled={isLoading}
+                        >
+                           {isLoading ? '⏳ Cancelando...' : '❌ Cancelar Pedido'}
+                        </button>
+                        <button className="action-button edit-button">
+                          📝 Editar Pedido
+                        </button>
+                        <button className="action-button confirm-button"
+                          onClick={() => handleOpenConfirmModal(order.order_id)}
+                          disabled={isLoading}
+                        >
+                          {isLoading ? '⏳ Confirmando...' : '✅ Confirmar Pedido'}
                         </button>
                       </div>
                     </div>
@@ -200,8 +267,35 @@ const OrderHistoryPage = () => {
           )}
         </>
       )}
+      <OrderDetailsModal
+        orderId={selectedOrderId}
+        isOpen={showDetailsModal}
+        onClose={handleCloseDetailsModal}
+      />
+      <ConfirmationModal
+        isOpen={showConfirmOrderModal}
+        onClose={() => setShowConfirmOrderModal(false)}
+        onConfirm={() => handleConfirmOrder(actionOrderId)}
+        title="Confirmar Pedido"
+        message="Esta acción confirmará el pedido y no se podrá modificar posteriormente. ¿Estás seguro de que deseas confirmar este pedido?"
+        confirmText="Sí, confirmar pedido"
+        cancelText="No, volver"
+        confirmButtonClass="confirm-button"
+        icon="✅"
+      />
+      <ConfirmationModal
+        isOpen={showCancelOrderModal}
+        onClose={() => setShowCancelOrderModal(false)}
+        onConfirm={() => handleCancelOrder(actionOrderId)}
+        title="Cancelar Pedido"
+        message="Esta acción cancelará el pedido y liberará el inventario reservado. Esta acción no se puede deshacer. ¿Estás seguro de que deseas cancelar este pedido?"
+        confirmText="Sí, cancelar pedido"
+        cancelText="No, volver"
+        confirmButtonClass="delete-button"
+        icon="⚠️"
+      />
     </div>
   );
 };
 
-export default OrderHistoryPage;
+export default OrderManagePage;

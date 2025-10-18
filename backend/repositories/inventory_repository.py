@@ -25,7 +25,7 @@ class InventoryRepository:
     
     def reserve_stock(self, product_id: int, amount: int) -> bool:
         inventory = self.get_inventory_by_product_id(product_id)
-        if inventory: ##Evitar reglas de negocio en el repositorio
+        if inventory:
             inventory.reserved += amount
             inventory.last_updated = datetime.now(timezone.utc)
             self.session.add(inventory)
@@ -33,6 +33,20 @@ class InventoryRepository:
             self.session.refresh(inventory)
             return True
         return False
+    
+    def release_reserved_stock(self,product_id:int , amount:int) -> bool:
+        inventory=self.get_inventory_by_product_id(product_id)
+        if inventory:
+            if inventory.reserved < amount:
+                amount = inventory.reserved
+            inventory.reserved -= amount
+            inventory.last_updated = datetime.now(timezone.utc)
+            self.session.add(inventory)
+            self.session.commit()
+            self.session.refresh(inventory)
+            return True
+        else :
+            return False
     
     def confirm_reservation(self, product_id: int, amount: int) -> bool:
         inventory = self.get_inventory_by_product_id(product_id)

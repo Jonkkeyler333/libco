@@ -114,7 +114,7 @@ async def login_user(
     )
     
     user_response = UserResponse(
-        user_id=user.user_id,
+        user_id=user.user_id, # type: ignore
         username=user.username,
         email=user.email,
         ID=user.ID,

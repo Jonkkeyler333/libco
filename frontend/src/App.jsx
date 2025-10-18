@@ -9,6 +9,7 @@ import AuthPage from './pages/AuthPage';
 import Dashboard from './pages/Dashboard';
 import CreateOrderPage from './pages/CreateOrderPage';
 import InventoryPage from './pages/InventoryPage';
+import OrderManagePage from './pages/OrderManagePage';
 import OrderHistoryPage from './pages/OrderHistoryPage';
 
 // Ruta protegida que requiere autenticación
@@ -103,7 +104,7 @@ function AppContent() {
         {/* Rutas solo para clientes */}
         <Route path="/crear-pedido" element={<ClientRoute element={<CreateOrderPage />} />} />
         <Route path="/historial" element={<ClientRoute element={<OrderHistoryPage />} />} />
-        <Route path="/mis-pedidos" element={<ClientRoute element={<OrderHistoryPage />} />} />
+        <Route path="/mis-pedidos" element={<ClientRoute element={<OrderManagePage />} />} />
         
         {/* Rutas solo para administradores */}
         <Route path="/inventario" element={<AdminRoute element={<InventoryPage/>} />} />

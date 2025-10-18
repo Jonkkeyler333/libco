@@ -1,4 +1,3 @@
-// Stats Card component for LibCo
 const StatsCard = ({ title, value, subtitle, icon, color }) => {
   return (
     <div className={`stats-card ${color || ''}`}>

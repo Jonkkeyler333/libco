@@ -104,7 +104,6 @@ def validate_order(session:Session, order_id:int) -> Tuple[Order, List[OrderItem
             success = inventory_repo.reserve_stock(item.product_id, item.quantity)
             if not success:
                 raise BusinessError(f"No se pudo reservar stock para el producto ID {item.product_id}")
-
         order_repo.update_order_status(order_id, "check")
         session.commit()
         return get_order_details(session, order_id)
@@ -122,8 +121,8 @@ def confirm_order(session:Session, order_id:int) -> Tuple[Order, List[OrderItemD
         order = order_repo.get_order_by_id(order_id)
         if not order:
             raise BusinessError(f"Orden con ID {order_id} no encontrada")
-        if order.status != 'confirmed':
-            raise BusinessError(f"Orden con ID {order_id} no está en estado 'confirmed'")
+        if order.status != 'check':
+            raise BusinessError(f"Orden con ID {order_id} no está en estado 'check'")
         order_items = order_repo.get_order_items(order_id)
         for item in order_items:
             success = inventory_repo.confirm_reservation(item.product_id, item.quantity)
@@ -139,7 +138,6 @@ def confirm_order(session:Session, order_id:int) -> Tuple[Order, List[OrderItemD
         session.rollback()
         raise BusinessError(f"Error al confirmar la orden: {str(e)}")
 
-
 def get_order_details(session: Session, order_id: int) -> Tuple[Order, List[OrderItemDetail]]:
     order_repo = OrderRepository(session)
     product_repo = ProductRepository(session)
@@ -148,7 +146,6 @@ def get_order_details(session: Session, order_id: int) -> Tuple[Order, List[Orde
         raise BusinessError(f"Orden con ID {order_id} no encontrada")
     order_items = order_repo.get_order_items(order_id)
     items_details: List[OrderItemDetail] = []
-    
     for item in order_items:
         if item.order_item_id is None:
             raise BusinessError(f"Item de orden con product_id {item.product_id} no tiene ID")
@@ -243,3 +240,32 @@ def get_user_orders(session: Session, user_id: int, page: int = 1, page_size: in
         "has_next": has_next,
         "has_previous": has_previous
     }
+    
+def cancel_order(session: Session, order_id:int) -> Order:
+    order_repo = OrderRepository(session)
+    inventory_repo = InventoryRepository(session)
+    order = order_repo.get_order_by_id(order_id)
+    if not order:
+        raise BusinessError(f"Orden con ID {order_id} no encontrada")
+    if order.status != 'check' and order.status != 'draft':
+        raise BusinessError(f"Solo se pueden cancelar órdenes en estado 'check' o 'draft'")
+    
+    order_items = order_repo.get_order_items(order_id)
+    
+    # Solo liberamos el inventario si la orden está en estado 'check', ya que
+    # las órdenes en estado 'draft' no han reservado inventario todavía
+    if order.status == 'check':
+        for item in order_items:
+            success_1 = inventory_repo.release_reserved_stock(item.product_id, item.quantity)
+            if not success_1:
+                raise BusinessError(f"No se pudo liberar la reserva para el producto ID {item.product_id}")
+    
+    # Eliminamos los items de la orden independientemente del estado
+    for item in order_items:
+        success_2 = order_repo.delete_order_item(item.order_id, item.product_id)
+        if not success_2:
+            raise BusinessError(f"No se pudo eliminar el item con product_id {item.product_id} de la orden {order_id}")
+    
+    order_repo.update_order_status(order_id, "canceled")
+    session.commit()
+    return order

@@ -19,7 +19,8 @@ const CreateOrderPage = () => {
     isLoading,
     isValidating,
     validationResult,
-    error: contextError
+    error: contextError,
+    clearError
   } = useOrder();
   
   const [products, setProducts] = useState([]);
@@ -29,7 +30,10 @@ const CreateOrderPage = () => {
   const [cartItems, setCartItems] = useState([]);
   const [submittedOrderId, setSubmittedOrderId] = useState(null);
 
-  // Cargar productos cuando el componente se monta
+  useEffect(() => {
+    clearError();
+  }, []);
+
   useEffect(() => {
     const loadProducts = async () => {
       try {
@@ -48,69 +52,53 @@ const CreateOrderPage = () => {
     loadProducts();
   }, []);
 
-  // Sincronizar con el estado del carrito desde el contexto
   useEffect(() => {
     if (currentOrder && currentOrder.items) {
       setCartItems(currentOrder.items);
     }
   }, [currentOrder]);
-  
-  // Mostrar el mensaje de error del contexto si existe
-  useEffect(() => {
-    if (contextError) {
-      setError(contextError);
-    }
-  }, [contextError]);
 
-  // Filtrar productos basados en el término de búsqueda
   const filteredProducts = products.filter(product =>
     product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (product.author && product.author.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  // Manejar cambios en la búsqueda
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
 
-  // Manejar la adición de un producto al carrito
   const handleAddToCart = (product, quantity = 1) => {
     addToCart(product, quantity);
   };
 
-  // Manejar la eliminación de un producto del carrito
   const handleRemoveFromCart = (productId) => {
     removeFromCart(productId);
   };
 
-  // Manejar la actualización de la cantidad de un producto en el carrito
   const handleQuantityChange = (productId, newQuantity) => {
     updateQuantity(productId, newQuantity);
   };
 
-  // Manejar el envío del pedido
   const handleSubmitOrder = async () => {
     try {
-      setError(null);
-      
-      // Obtener el token de autenticación
       const token = localStorage.getItem('auth_token');
-      
-      // Usar directamente el método submitOrder del contexto
       const result = await submitOrder(token);
+      console.log('CreateOrderPage - submitOrder result:', result);
       
-      // Guardar el ID del pedido para mostrar la validación
       if (result && result.order && result.order.order_id) {
+        console.log('CreateOrderPage - Setting submittedOrderId to:', result.order.order_id);
         setSubmittedOrderId(result.order.order_id);
+      } else {
+        console.log('CreateOrderPage - No order_id found in result');
       }
       
     } catch (err) {
       console.error('Error creating order:', err);
-      setError(err.message || 'Error al crear el pedido');
+      console.log('CreateOrderPage - Current submittedOrderId after error:', submittedOrderId);
     }
   };
 
-  // Si la página está cargando
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -127,8 +115,18 @@ const CreateOrderPage = () => {
       <main className="main-content">
         <Header />
         
+        {/* Error de carga de productos */}
         {error && (
-          <div className="error-message">{error}</div>
+          <div className="error-message">
+            <span>{error}</span>
+            <button 
+              className="close-error-btn"
+              onClick={() => setError(null)}
+              aria-label="Cerrar error"
+            >
+              ✕
+            </button>
+          </div>
         )}
         
         <div className="create-order-container">
@@ -272,19 +270,9 @@ const CreateOrderPage = () => {
                 </div>
               </>
             )}
-            
-            {/* Mensaje de error */}
-            {error && (
-              <div className="order-error">
-                <h3>Error al procesar el pedido</h3>
-                <p>{error}</p>
-              </div>
-            )}
           </div>
         </div>
-        
-        {/* Mostrar el componente de validación cuando sea necesario */}
-        {(isValidating || validationResult) && submittedOrderId && (
+        {(isValidating || validationResult || contextError) && submittedOrderId && (
           <OrderValidation orderId={submittedOrderId} />
         )}
       </main>

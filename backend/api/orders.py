@@ -5,7 +5,8 @@ from typing import Optional, Dict, Any , Annotated
 
 from db.database import get_session
 from schemas.create_order import (
-    CreateOrderRequest , 
+    CreateOrderRequest ,
+    CancelOrderResponse,
     CreateOrderResponse ,
     EditOrderItemRequest, 
     OrderItemResponse,
@@ -26,17 +27,15 @@ from services.orders_service import (
     get_order_details,
     get_user_orders,
     InsufficientStockError,
-    ProductNotFoundError
+    ProductNotFoundError,
+    cancel_order
 )
-from repositories.order_repository import OrderRepository
-from repositories.product_repository import ProductRepository
 from core.config import settings
 from fastapi.security import OAuth2PasswordBearer
 
-# Configure OAuth2
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 
-# Dependencia para verificar token y obtener user_id
+# dependencia para verificar token y obtener user_id
 def verify_token(token: str = Depends(oauth2_scheme)) -> int:
     """Verificar token JWT y devolver el user_id"""
     payload = verify_token_service(token)
@@ -89,7 +88,26 @@ def create_order_endpoint(
                 detail=pnf.message,
                 error_code="PRODUCT_NOT_FOUND",
                 product_id=pnf.product_id
-            ).model_dump()
+            ).model_dump(mode='json')
+        )
+    except BusinessError as be:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(be))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
+@router.delete("/{order_id}/cancel", response_model=CancelOrderResponse)
+def cancel_order_endpoint(
+    order_id: int,
+    session: Session = Depends(get_session),
+    user_id: int = Depends(verify_token)
+):
+    try:
+        order= cancel_order(session, order_id)
+        return CancelOrderResponse(
+            order_id=order.order_id, # type: ignore
+            status=OrdenStatus(order.status),
+            message="Orden cancelada exitosamente",
+            next_step="N/A"
         )
     except BusinessError as be:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(be))
@@ -115,7 +133,6 @@ def validate_order_endpoint(
                 sub_total=item["sub_total"]
             ) for item in items_details
         ]
-        
         return CreateOrderResponse(
             order_id=order.order_id, # type: ignore
             status=OrdenStatus(order.status),
@@ -127,13 +144,14 @@ def validate_order_endpoint(
             next_step="Confirmar orden"
         )
     except InsufficientStockError as ise:
+        error_response = InsufficientStockErrorSchema(
+            detail=ise.message,
+            error_code="INSUFFICIENT_STOCK",
+            available_stock=ise.available_stock
+        )
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=InsufficientStockErrorSchema(
-                detail=ise.message,
-                error_code="INSUFFICIENT_STOCK",
-                available_stock=ise.available_stock
-            ).model_dump()
+            detail=error_response.model_dump(mode='json')
         )
     except BusinessError as be:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(be))
@@ -169,13 +187,14 @@ def confirm_order_endpoint(
             next_step="Pedido completado"
         )
     except InsufficientStockError as ise:
+        error_response = InsufficientStockErrorSchema(
+            detail=ise.message,
+            error_code="INSUFFICIENT_STOCK",
+            available_stock=ise.available_stock
+        )
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=InsufficientStockErrorSchema(
-                detail=ise.message,
-                error_code="INSUFFICIENT_STOCK",
-                available_stock=ise.available_stock
-            ).model_dump()
+            detail=error_response.model_dump(mode='json')
         )
     except BusinessError as be:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(be))
@@ -211,7 +230,6 @@ def delete_order_item_endpoint(
     except BusinessError as be:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(be))
 
-# US-06: Endpoint para listar pedidos del usuario
 @router.get("/user/{user_id}", response_model=OrderListResponse, tags=["Orders (Listar Pedidos)"])
 def get_user_orders_endpoint(
     user_id: int,

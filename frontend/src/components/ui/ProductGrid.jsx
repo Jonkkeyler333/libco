@@ -1,4 +1,3 @@
-// ProductGrid component for LibCo
 import ProductCard from './ProductCard';
 
 const ProductGrid = ({ title, products, viewAllLink, showBadge, badgeText }) => {

@@ -1,18 +1,21 @@
-// Header component for LibCo
 import { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { useOrder } from '../../context/OrderContext';
+import { useNavigate } from 'react-router-dom';
 
 const Header = () => {
   const { currentOrder, getCartItemsCount } = useOrder();
   const [isCartOpen, setIsCartOpen] = useState(false);
-  
+  const { user ,isAdmin } = useAuth();
+  const navigate = useNavigate();
   const cartItemsCount = getCartItemsCount();
   
   return (
     <header className="main-header">
       <div className="header-content">
         <h1>Panel Principal</h1>
-        <div className="header-actions">
+        {!isAdmin() && (
+          <div className="header-actions">
           <div className="cart-container">
             <button 
               className="cart-button"
@@ -39,9 +42,7 @@ const Header = () => {
                 </div>
                 
                 <div className="cart-items">
-                  {currentOrder.items.length === 0 ? (
-                    <p className="empty-cart">Tu carrito está vacío</p>
-                  ) : (
+                  {currentOrder.items.length === 0 ? (<p className="empty-cart">Tu carrito está vacío</p>) : (
                     <ul>
                       {currentOrder.items.map((item) => (
                         <li key={item.product_id} className="cart-item">
@@ -69,22 +70,25 @@ const Header = () => {
                   <div className="cart-actions">
                     <button 
                       className="view-cart-button"
+                      onClick={() => navigate("/crear-pedido")}
                       disabled={currentOrder.items.length === 0}
                     >
                       Ver Detalle
                     </button>
-                    <button 
+                    {/* <button 
                       className="checkout-button"
+                      onClick={() => navigate("")}
                       disabled={currentOrder.items.length === 0}
                     >
                       Procesar Pedido
-                    </button>
+                    </button> */}
                   </div>
                 </div>
               </div>
             )}
           </div>
         </div>
+        )}
       </div>
     </header>
   );

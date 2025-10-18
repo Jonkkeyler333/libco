@@ -1,9 +1,7 @@
 import React, { createContext, useContext, useReducer } from 'react';
 
-// Order Context
 const OrderContext = createContext();
 
-// Order reducer
 const orderReducer = (state, action) => {
   switch (action.type) {
     case 'ADD_TO_CART':
@@ -101,6 +99,16 @@ const orderReducer = (state, action) => {
             : order
         )
       };
+    
+    case 'ORDER_CONFIRMED':
+      return {
+        ...state,
+        orders: state.orders.map(order =>
+          order.order_id === action.payload.order_id
+            ? { ...order, ...action.payload }
+            : order
+        )
+      };
 
     case 'SET_LOADING':
       return {
@@ -115,12 +123,19 @@ const orderReducer = (state, action) => {
         isLoading: false,
         isValidating: false
       };
+
+    case 'CLEAR_ERROR':
+      return {
+        ...state,
+        error: null
+      };
     
     case 'START_VALIDATION':
       return {
         ...state,
         isValidating: true,
-        validationResult: null
+        validationResult: null,
+        error: null
       };
       
     case 'VALIDATION_COMPLETE':
@@ -135,7 +150,6 @@ const orderReducer = (state, action) => {
   }
 };
 
-// Initial state
 const initialOrderState = {
   currentOrder: {
     items: [],
@@ -149,9 +163,22 @@ const initialOrderState = {
   error: null
 };
 
-// Order Provider
 export const OrderProvider = ({ children }) => {
   const [state, dispatch] = useReducer(orderReducer, initialOrderState);
+
+  const getErrorMessage = (error, defaultMessage = 'Ha ocurrido un error') => {
+    console.log('Error object received:', error);
+    if (typeof error.message === 'string') {
+      console.log('es un string');
+      return error.message;
+    } else if (error.response && error.response.data && error.response.data.detail) {
+      console.log(typeof(error.response));
+      return error.response.data.detail;
+    } else if (error.detail) {
+      return error.detail;
+    }
+    return defaultMessage;
+  };
 
   const addToCart = (product, quantity = 1) => {
     const orderItem = {
@@ -181,29 +208,33 @@ export const OrderProvider = ({ children }) => {
 
   const submitOrder = async (token) => {
     dispatch({ type: 'SET_LOADING', payload: true });
+    let createdOrder = null;
     try {
-      // Import dynamically to avoid circular dependency
       const { orderService } = await import('../services/orderService');
-      
-      // Formatear los datos según lo esperado por la API
       const orderData = {
         items: state.currentOrder.items.map(item => ({
           product_id: item.product_id,
           quantity: item.quantity
         }))
       };
-      
-      const newOrder = await orderService.createOrder(orderData, token);
-      dispatch({ type: 'ADD_ORDER', payload: newOrder });
-      
-      // Iniciamos el proceso de validación automáticamente
+      // Crear el pedido primero
+      createdOrder = await orderService.createOrder(orderData, token);
+      dispatch({ type: 'ADD_ORDER', payload: createdOrder });
+      // Intentar validar el pedido
       dispatch({ type: 'START_VALIDATION' });
-      const validatedOrder = await validateOrder(newOrder.order_id, token);
+      const validatedOrder = await validateOrder(createdOrder.order_id, token);
       dispatch({ type: 'VALIDATION_COMPLETE', payload: validatedOrder });
       
-      return { order: newOrder, validation: validatedOrder };
+      return { order: createdOrder, validation: validatedOrder };
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error.message });
+      const errorMessage = getErrorMessage(error, 'Error al crear el pedido');
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      
+      // Si el pedido se creó pero falló la validación, retornarlo de todos modos
+      if (createdOrder) {
+        return { order: createdOrder, validation: null, error: errorMessage };
+      }
+      
       throw error;
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
@@ -213,12 +244,8 @@ export const OrderProvider = ({ children }) => {
   const validateOrder = async (orderId, token) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      // Import dynamically to avoid circular dependency
       const { orderService } = await import('../services/orderService');
-      
-      // Simulación de procesamiento (5 segundos)
-      await new Promise(resolve => setTimeout(resolve, 5000));
-      
+      await new Promise(resolve => setTimeout(resolve, 1000));
       const validatedOrder = await orderService.validateOrder(orderId, token);
       dispatch({ type: 'UPDATE_ORDER_STATUS', payload: { 
         order_id: orderId, 
@@ -226,24 +253,23 @@ export const OrderProvider = ({ children }) => {
       }});
       return validatedOrder;
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error.message });
+      const errorMessage = getErrorMessage(error, 'Error al validar el pedido');
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
       throw error;
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
   }
 
-
   const fetchOrders = async (token) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      // Import dynamically to avoid circular dependency
       const { orderService } = await import('../services/orderService');
-      
       const orders = await orderService.getUserOrders(token);
       dispatch({ type: 'SET_ORDERS', payload: orders });
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error.message });
+      const errorMessage = getErrorMessage(error, 'Error al obtener pedidos');
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
@@ -252,13 +278,30 @@ export const OrderProvider = ({ children }) => {
   const cancelOrder = async (orderId, token) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      // Import dynamically to avoid circular dependency
       const { orderService } = await import('../services/orderService');
       
       await orderService.cancelOrder(orderId, token);
       dispatch({ type: 'UPDATE_ORDER_STATUS', payload: { order_id: orderId, status: 'cancelled' } });
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error.message });
+      const errorMessage = getErrorMessage(error, 'Error al cancelar pedido');
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
+  const confirmOrder = async (orderId, token) => {
+    dispatch({ type: 'SET_LOADING', payload: true });
+    try {
+      const { orderService } = await import('../services/orderService');
+      const confirmedOrder = await orderService.confirmOrder(orderId, token);
+      dispatch({type: 'UPDATE_ORDER_STATUS', payload: { order_id: orderId, status: confirmedOrder.status}});
+      dispatch({type: 'ORDER_CONFIRMED', payload: confirmedOrder });
+      return confirmedOrder;
+    } catch (error) {
+      const errorMessage = getErrorMessage(error, 'Error al confirmar el pedido');
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
       throw error;
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
@@ -267,6 +310,10 @@ export const OrderProvider = ({ children }) => {
 
   const getCartItemsCount = () => {
     return state.currentOrder.items.reduce((total, item) => total + item.quantity, 0);
+  };
+
+  const clearError = () => {
+    dispatch({ type: 'CLEAR_ERROR' });
   };
 
   const value = {
@@ -278,8 +325,10 @@ export const OrderProvider = ({ children }) => {
     submitOrder,
     validateOrder,
     fetchOrders,
+    confirmOrder,
     cancelOrder,
-    getCartItemsCount
+    getCartItemsCount,
+    clearError
   };
 
   return (
@@ -289,7 +338,6 @@ export const OrderProvider = ({ children }) => {
   );
 };
 
-// Custom hook
 export const useOrder = () => {
   const context = useContext(OrderContext);
   if (!context) {

@@ -9,7 +9,7 @@ import ProductGrid from '../components/ui/ProductGrid';
 import { productService } from '../services/productService';
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user ,isAdmin } = useAuth();
   const { getCartItemsCount } = useOrder();
   const [popularProducts, setPopularProducts] = useState([]);
   const [latestProducts, setLatestProducts] = useState([]);
@@ -47,7 +47,7 @@ const Dashboard = () => {
             }));
           setLatestProducts(discounted);
         } else {
-          // Fallback a datos de muestra si la API no devuelve productos
+          // fallback a datos de muestra si la API no devuelve productos
           const mockBooks = [
             { product_id: 1, title: 'El Manifiesto Comunista', author: 'Karl Marx y Friedrich Engels', price: 9.99, front_page_url: '/libco_logo.png' },
             { product_id: 2, title: 'Así habló Zaratustra', author: 'Friedrich Nietzsche', price: 16.99, front_page_url: '/libco_logo.png' },
@@ -89,13 +89,16 @@ const Dashboard = () => {
         {error && (
           <div className="error-message">{error}</div>
         )}
-        
-        <div className="dashboard-container">
-          <div className="welcome-section">
-            <h2>¡Bienvenido de vuelta!</h2>
-            <p>Descubre nuevos libros y continúa tu viaje literario</p>
-          </div>
-          
+       
+        {!isAdmin() && (
+          <div className="dashboard-container">
+            <div className="welcome-section">
+              <h2>¡Bienvenido de vuelta!</h2>
+              <p className="user-name" title={`${user?.name || ''} ${user?.last_name || ''}`}>
+                {user?.name || ''} {user?.last_name || ''}
+              </p>
+              <p>Descubre nuevos libros y continúa tu viaje literario</p>
+            </div>
           <div className="stats-grid">
             <StatsCard 
               title="Pedidos realizados" 
@@ -135,6 +138,20 @@ const Dashboard = () => {
             badgeText="OFERTA"
           />
         </div>
+        )}
+
+        {isAdmin() && (
+          <div className="dashboard-container">
+            <div className="welcome-section">
+              <h2>Administra tu librería 👨🏽‍💻</h2>
+              <p className="user-name" title={`${user?.name || ''} ${user?.last_name || ''}`}>
+                Bienvenido admin : {user?.name || ''} {user?.last_name || ''}
+              </p>
+            </div>
+        </div>
+        )}
+        
+       
       </main>
     </div>
   );

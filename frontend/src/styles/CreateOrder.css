@@ -176,10 +176,23 @@ tbody tr:hover {
 }
 
 /* Estilos para los mensajes de éxito y error */
+.error-message {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 1rem;
+  padding: 1rem;
+  background-color: #ffebeb;
+  color: #d32f2f;
+  border: 1px solid #ffcccc;
+  border-radius: 6px;
+}
+
 .order-success, .order-error {
   margin-top: 1.5rem;
   padding: 1rem;
   border-radius: 6px;
+  position: relative;
 }
 
 .order-success {
@@ -194,6 +207,39 @@ tbody tr:hover {
   border: 1px solid #ffcccc;
 }
 
-.order-success h3, .order-error h3 {
+.error-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: 0.8rem;
+}
+
+.order-success h3, .order-error h3 {
+  margin: 0;
+}
+
+.order-error h4 {
+  margin: 0.5rem 0;
+  font-weight: normal;
+  font-size: 0.9rem;
+}
+
+.close-error-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: inherit;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  line-height: 1;
+  min-width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-error-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
 }
