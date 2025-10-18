@@ -59,7 +59,7 @@ const Sidebar = () => {
               <>
                 <Link to="/inventario" className={`nav-item ${location.pathname === '/inventario' ? 'active' : ''}`}>
                   <span className="nav-icon">📚</span>
-                  {!isCollapsed && <span className="nav-label">Inventario de Productos</span>}
+                  {!isCollapsed && <span className="nav-label">Inventario</span>}
                 </Link>
                 <Link to="/reportes" className={`nav-item ${location.pathname === '/reportes' ? 'active' : ''}`}>
                   <span className="nav-icon">📊</span>
