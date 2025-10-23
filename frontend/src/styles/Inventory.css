@@ -19,16 +19,46 @@
 
 /* Estilos para la barra de búsqueda */
 .search-container {
+  width:70%;
   margin-bottom: 1.5rem;
+  display: inline-block;
+  gap: 8px;
+  align-items: center;
+}
+
+.select-search {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid #ddd;  
+  border-radius: 8px;
+  font-size: 1rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  background-color: rgb(0, 20, 73);
+}
+
+.select-search select {
+  padding: 0.5rem;
+  border: none;
+  background: rgb(0, 20, 73);
+  color: white;
+  cursor: pointer;
 }
 
 .search-input {
   width: 100%;
-  padding: 0.8rem 1rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 1rem;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  padding: 0.8rem;
+  border: none;
+  border-radius: 0px;
+}
+
+.search-clear {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
 }
 
 .search-input:focus {
@@ -86,6 +116,20 @@ tbody tr:hover {
   text-align: center;
   padding: 2rem 0;
   color: #888;
+}
+
+.reserved-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 12px; /* Bordes redondeados */
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  background-color: #646cff; /* Color azul para reservado */
 }
 
 .stock-badge {

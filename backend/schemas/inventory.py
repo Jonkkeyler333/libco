@@ -5,6 +5,7 @@ class InventoryResponse(BaseModel):
     # sku: str
     title: str
     author: str
+    isbn: str
     price: float
     quantity: int
     reserved: int

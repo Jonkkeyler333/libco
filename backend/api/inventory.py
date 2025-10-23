@@ -13,6 +13,7 @@ router = APIRouter(prefix="/inventory", tags=["inventory"])
 @router.get("/", response_model=List[InventoryResponse])
 def list_inventory(
     title: Optional[str] = Query(None),
+    isbn: Optional[str] = Query(None),
     session=Depends(get_session),
     current_user: User = Depends(get_current_user)
 ):
@@ -23,6 +24,8 @@ def list_inventory(
 
     if title:
         query = query.where(Product.title.ilike(f"%{title}%"))
+    if isbn:
+        query = query.where(Product.isbn.ilike(f"%{isbn}%"))
 
     results = session.exec(query).all()
     inventory_list = []
@@ -33,6 +36,7 @@ def list_inventory(
             # sku=product.sku,
             title=product.title,
             author=product.author,
+            isbn=product.isbn,
             price=product.price,
             quantity=inventory.quantity,
             reserved=inventory.reserved
