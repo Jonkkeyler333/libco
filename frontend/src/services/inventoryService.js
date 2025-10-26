@@ -14,3 +14,16 @@ export const getInventory = async (filter = filter) => {
   });
   return response.data;
 };
+
+export const adjustInventory = async (updates = []) => {
+  const url = `${API_URL}/adjust-many`;
+  const token = localStorage.getItem('auth_token');
+  const response = await axios.put(url, updates, {
+    withCredentials: true,
+    headers: {
+      Authorization: token ? `Bearer ${token}` : undefined,
+      'Content-Type': 'application/json',
+    },
+  });
+  return response.data;
+};

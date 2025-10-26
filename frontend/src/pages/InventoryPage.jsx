@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { getInventory } from '../services/inventoryService';
+import { getInventory, adjustInventory } from '../services/inventoryService';
 import Sidebar from '../components/layout/Sidebar';
 import '../styles/Inventory.css';
 
@@ -9,6 +9,11 @@ const InventoryPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchField, setSearchField] = useState('title'); // 'title' or 'isbn'
   const debounceRef = useRef(null);
+  const [adjustments, setAdjustments] = useState({}); // product_id -> amount to add (>=0)
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
 
   useEffect(() => {
     fetchInventory({}); // Mostrar todo el inventario por defecto
@@ -28,6 +33,17 @@ const InventoryPage = () => {
       setInventory([]);
     }
     setLoading(false);
+  };
+
+  const handleQuantityChange = (id, value) => {
+    // Convertir a número y validar
+    const quantity = parseInt(value, 10);
+    if (quantity < 0) return;
+
+    setAdjustments(prev => ({
+      ...prev,
+      [id]: quantity, // Evita negativos
+    }));
   };
 
   return (
@@ -72,7 +88,6 @@ const InventoryPage = () => {
                 }}
                 className="search-input"
               />
-
               {searchQuery && (
                 <button
                   onClick={() => {
@@ -84,8 +99,37 @@ const InventoryPage = () => {
                 >
                   Limpiar
                 </button>
-              )}                  
-            </div>            
+              )}
+              {/*Buscador*/}
+              
+            </div>                         
+            {/* Switch y botón de actualizar */}
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <label className="switch-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input
+                  type="checkbox"
+                  checked={isEditing}
+                  onChange={(e) => {
+                    setIsEditing(e.target.checked);
+                    if (!e.target.checked) {
+                      setAdjustments({}); // Limpiar ajustes al desactivar
+                    }
+                  }}
+                  className="switch-input"
+                />
+                <span className="switch-text">Modo edición</span>
+              </label>
+              
+              {isEditing && Object.values(adjustments).some(v => v && v > 0) && (
+                <button
+                  onClick={() => setShowConfirm(true)}
+                  className="btn-update"
+                  aria-label="Actualizar inventario"
+                >
+                  Actualizar
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Inventario */}
@@ -105,12 +149,13 @@ const InventoryPage = () => {
                     <th>Precio</th>
                     <th>Cantidad</th>
                     <th>Reservado</th>
+                    {isEditing && <th>Ajuste</th>}
                   </tr>
                 </thead>
                 <tbody>
                   {inventory.length === 0 ? (
                     <tr>
-                      <td colSpan="6" className="no-products">No hay productos disponibles</td>
+                      <td colSpan="7" className="no-products">No hay productos disponibles</td>
                     </tr>
                   ) : (
                     inventory.map(item => (
@@ -129,6 +174,22 @@ const InventoryPage = () => {
                             {item.reserved}
                           </span>
                         </td>
+                        
+                        {isEditing && <td style={{ minWidth: 140 }}>
+                          <input
+                            type="text"                            
+                            className="quantity-input"
+                            placeholder='0'
+                            value={adjustments[item.product_id] || ''}
+                            onChange={(e) => handleQuantityChange(item.product_id, e.target.value)}
+                            onBlur={(e) => {
+                              // Si el campo está vacío al perder el foco, establecer a 0
+                              if (e.target.value === '') {
+                                handleQuantityChange(item.product_id, '0');
+                              }
+                            }}
+                          />
+                        </td>}
                       </tr>
                     ))
                   )}
@@ -137,6 +198,67 @@ const InventoryPage = () => {
             )}
           </div>
         </div>
+        {/* Modal de confirmación de actualización */}
+        {showConfirm && (
+          <div className="modal-overlay">
+            <div className="modal" role="dialog" aria-modal="true">
+              <h3>Confirmar actualización</h3>
+              <div className="modal-content">
+                <table className="confirm-table">
+                  <thead>
+                    <tr><th>Libro</th><th>Actual</th><th>Ajuste</th><th>Nuevo</th></tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(adjustments).filter(([,v]) => v && v > 0).map(([pid, adj]) => {
+                      const id = Number(pid);
+                      const item = inventory.find(i => i.product_id === id);
+                      if (!item) return null;
+                      const newQty = item.quantity + adj;
+                      return (
+                        <tr key={pid}>
+                          <td>{item.title}</td>
+                          <td>{item.quantity}</td>
+                          <td>+{adj}</td>
+                          <td>{newQty}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="modal-actions">
+                <button onClick={() => setShowConfirm(false)} className="btn-cancel">Cancelar</button>
+                <button
+                  onClick={async () => {
+                    setIsUpdating(true);
+                    try {
+                      const updates = Object.entries(adjustments).filter(([,v]) => v && v > 0).map(([pid, adj]) => {
+                        const id = Number(pid);
+                        const item = inventory.find(i => i.product_id === id);
+                        return { product_id: id, quantity: item.quantity + adj };
+                      });
+                      if (updates.length === 0) return setShowConfirm(false);
+                      await adjustInventory(updates);
+                      // refrescar inventario
+                      await fetchInventory({});
+                      setAdjustments({});
+                      setShowConfirm(false);
+                    } catch (err) {
+                      // manejar error simple
+                      alert('Error actualizando inventario');
+                    } finally {
+                      setIsUpdating(false);
+                    }
+                  }}
+                  className="btn-confirm"
+                  disabled={isUpdating}
+                >
+                  {isUpdating ? 'Actualizando...' : 'Confirmar y actualizar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

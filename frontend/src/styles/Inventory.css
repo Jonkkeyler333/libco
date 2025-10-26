@@ -19,14 +19,15 @@
 
 /* Estilos para la barra de búsqueda */
 .search-container {
-  width:70%;
+  width:100%;
   margin-bottom: 1.5rem;
-  display: inline-block;
-  gap: 8px;
+  display: flex;
+  gap: 12px;
   align-items: center;
 }
 
 .select-search {
+  width: 70%;
   display: flex;
   gap: 8px;
   align-items: center;
@@ -65,6 +66,84 @@
   border-color: #646cff;
   outline: none;
   box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
+}
+
+/* Estilos para el input de cantidad */
+.quantity-input {
+  width: 80px;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.quantity-input:focus {
+  border-color: #646cff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
+}
+
+/* Estilos para el switch y botones de edición */
+.switch-label {
+  cursor: pointer;
+  user-select: none;
+}
+
+.switch-input {
+  appearance: none;
+  width: 40px;
+  height: 20px;
+  background: #ccc;
+  border-radius: 20px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.switch-input:checked {
+  background: #646cff;
+}
+
+.switch-input::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  background: white;
+  position: absolute;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s;
+}
+
+.switch-input:checked::before {
+  transform: translateX(20px);
+}
+
+.switch-text {
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.btn-update {
+  background-color: #646cff;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-weight: 500;
+}
+
+.btn-update:hover {
+  background-color: #535bf2;
+}
+
+.btn-update:disabled {
+  background-color: #a5a6f6;
+  cursor: not-allowed;
 }
 
 /* Estilos para la tabla de productos */
