@@ -68,7 +68,10 @@ const OrderManagePage = () => {
     return new Date(dateString).toLocaleDateString('es-ES', {
       year: 'numeric',
       month: '2-digit',
-      day: '2-digit'
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
     });
   };
 
@@ -121,6 +124,7 @@ const OrderManagePage = () => {
       setLoading(true);
       await confirmOrder(orderId, token);
       setLoading(false);
+      alert('Pedido confirmado exitosamente.');
       loadOrders(currentPage);
     } catch (err) {
       setError(contextError);
@@ -134,6 +138,7 @@ const OrderManagePage = () => {
       setLoading(true);
       await cancelOrder(orderId, token);
       setLoading(false);
+      alert('Pedido cancelado exitosamente.');
       loadOrders(currentPage);
     } catch (err) {
       setError(contextError);
@@ -223,7 +228,9 @@ const OrderManagePage = () => {
                         >
                            {isLoading ? '⏳ Cancelando...' : '❌ Cancelar Pedido'}
                         </button>
-                        <button className="action-button edit-button">
+                        <button className="action-button edit-button" 
+                          onClick={() => navigate(`/editar-pedido/${order.order_id}`)}
+                        >
                           📝 Editar Pedido
                         </button>
                         <button className="action-button confirm-button"

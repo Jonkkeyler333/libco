@@ -24,7 +24,26 @@ export const orderService = {
       throw error;
     }
   },
-  
+  async getOrderById(orderId, token) {
+    try {
+      const headers = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const response = await fetch(`${API_URL}/api/orders/${orderId}`, {
+        headers
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Error al obtener el pedido');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error getting order by ID:', error);
+      throw error;
+    }
+  },
+
   // Get user's orders with pagination
   async getUserOrders(userId, page = 1, pageSize = 10, token) {
     try {
@@ -174,6 +193,75 @@ export const orderService = {
     } 
     catch (error){
       console.error(`Error getting order details ${orderId}:`, error);
+      throw error;
+    }
+  },
+
+  async deleteOrderItem(orderId,itemId,token){
+    try{
+      const headers = {};
+      if (token){
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const response = await fetch(`${API_URL}/api/orders/${orderId}/items/${itemId}`, {method:'DELETE',headers});
+      if (!response.ok){
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `Error deleting item ${itemId} from order ${orderId}`);
+      }
+      // El endpoint DELETE devuelve 204 No Content, no hay body que parsear
+      return { success: true };
+    }
+    catch(error){
+      console.error(`Error deleting item ${itemId} from order ${orderId}:`, error);
+      throw error;
+    }
+  },
+  async editOrderItem(orderId,itemId,quantity,token){
+    try{
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+      if (token){
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const response = await fetch(`${API_URL}/api/orders/${orderId}/items/${itemId}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({'quantity':quantity})
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `Error editing item ${itemId} from order ${orderId}`);
+      }
+      return await response.json();
+    }
+    catch(error){
+      console.error(`Error editing item ${itemId} from order ${orderId}:`, error);
+      throw error;
+    }
+  },
+  async addOrderItem(orderId,itemData,token){
+    try{
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+      if (token){
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const response = await fetch(`${API_URL}/api/orders/${orderId}/item`, {
+        method : 'POST',
+        headers,
+        body: JSON.stringify(itemData)
+        // { "product_id": 1,"quantity": 2} ejemplo
+      } );
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `Error adding item to order ${orderId}`);
+      }
+      return await response.json();
+    }
+    catch(error){
+      console.error(`Error adding item to order ${orderId}:`, error);
       throw error;
     }
   }

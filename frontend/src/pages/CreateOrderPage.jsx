@@ -152,6 +152,7 @@ const CreateOrderPage = () => {
               <table>
                 <thead>
                   <tr>
+                    <th>Portada</th>
                     <th>Título</th>
                     <th>Autor</th>
                     <th>Precio</th>
@@ -168,6 +169,13 @@ const CreateOrderPage = () => {
                   ) : (
                     filteredProducts.map((product) => (
                       <tr key={product.product_id}>
+                        <td>
+                          <img
+                            src={product.front_page_url || product.image_url}
+                            alt={product.title}
+                            style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                          />
+                        </td>
                         <td>{product.title}</td>
                         <td>{product.author}</td>
                         <td>${product.price.toFixed(2)}</td>

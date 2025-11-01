@@ -130,6 +130,16 @@ const orderReducer = (state, action) => {
         error: null
       };
     
+    case 'ADD_ORDER_ITEM':
+      return {
+        ...state,
+        orders: state.orders.map(order =>
+          order.order_id === action.payload.orderId
+            ? { ...order, items: [...order.items, action.payload.item] }
+            : order
+        )
+      };
+    
     case 'START_VALIDATION':
       return {
         ...state,
@@ -291,6 +301,67 @@ export const OrderProvider = ({ children }) => {
     }
   };
 
+  const addOrderItem = async (orderId, itemData, token) => {
+    dispatch({ type: 'SET_LOADING', payload: true });
+    try {
+      const { orderService } = await import('../services/orderService');
+      const newItem = await orderService.addOrderItem(orderId, itemData, token);
+      dispatch({ type: 'ADD_ORDER_ITEM', payload: { orderId, item: newItem } });
+      return newItem;
+    } catch (error) {
+      const errorMessage = getErrorMessage(error, 'Error al agregar artículo al pedido');
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
+  const editOrderItem = async (orderId, itemId, quantity, token) => {
+    dispatch({ type: 'SET_LOADING', payload: true });
+    try {
+      const { orderService } = await import('../services/orderService');
+      const updatedItem = await orderService.editOrderItem(orderId, itemId, quantity, token);
+      return updatedItem;
+    } catch (error) {
+      const errorMessage = getErrorMessage(error, 'Error al editar artículo del pedido');
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
+  const deleteOrderItem = async (orderId, itemId, token) => {
+    dispatch({ type: 'SET_LOADING', payload: true });
+    try {
+      const { orderService } = await import('../services/orderService');
+      await orderService.deleteOrderItem(orderId, itemId, token);
+      return true;
+    } catch (error) {
+      const errorMessage = getErrorMessage(error, 'Error al eliminar artículo del pedido');
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
+  const getOrderDetails = async (orderId, token) => {
+    dispatch({ type: 'SET_LOADING', payload: true });
+    try {
+      const { orderService } = await import('../services/orderService');
+      const orderDetails = await orderService.getOrderDetails(orderId, token);
+      return orderDetails;
+    } catch (error) {
+      const errorMessage = getErrorMessage(error, 'Error al obtener detalles del pedido');
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
   const confirmOrder = async (orderId, token) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
@@ -327,6 +398,10 @@ export const OrderProvider = ({ children }) => {
     fetchOrders,
     confirmOrder,
     cancelOrder,
+    addOrderItem,
+    editOrderItem,
+    deleteOrderItem,
+    getOrderDetails,
     getCartItemsCount,
     clearError
   };

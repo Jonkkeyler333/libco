@@ -141,6 +141,17 @@ class EditOrderItemRequest(BaseModel):
                 {"quantity": 3}
             }
 
+class AddOrderItemRequest(BaseModel):
+    """Request model for adding an item to an existing order.
+    """
+    product_id : int = Field(..., gt=0, description="ID of the product to add to the order")
+    quantity : int = Field(..., gt=0, description="Quantity of the product to add to the order")
+
+    class Config:
+        schema_extra={"example": 
+                { "product_id": 1,"quantity": 2}
+            }
+
 class OrderListItemResponse(BaseModel):
     """Response model for an order in the user's order list.
     """
@@ -197,5 +208,23 @@ class OrderListResponse(BaseModel):
                 "total_pages": 2,
                 "has_next": True,
                 "has_previous": False
+            }
+        }
+
+class OrderByIdResponse(BaseModel):
+    """Response model for retrieving an order by its ID.
+    """
+    order_id: int
+    status: OrdenStatus
+    total: float = Field(ge=0)
+    created_at: datetime
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "order_id": 1,
+                "status": "completed",
+                "total": 45.97,
+                "created_at": "2024-01-15T10:30:00Z"
             }
         }

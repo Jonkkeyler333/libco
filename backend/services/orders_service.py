@@ -174,6 +174,13 @@ def get_orders_by_user(session: Session, user_id: int, limit: int = 10, offset: 
         orders_with_details.append((order, items_details))
     return orders_with_details
 
+def get_order_by_id(session: Session, order_id: int) -> Order:
+    order_repo = OrderRepository(session)
+    order = order_repo.get_order_by_id(order_id)
+    if not order:
+        raise BusinessError(f"Orden con ID {order_id} no encontrada")
+    return order
+
 def edit_order_item(session: Session , order_id : int , product_id : int , new_quantity : int)-> OrderItem:
     if new_quantity <= 0:
         raise BusinessError("La cantidad debe ser mayor que cero")
@@ -181,8 +188,8 @@ def edit_order_item(session: Session , order_id : int , product_id : int , new_q
     order = order_repo.get_order_by_id(order_id)
     if not order:
         raise BusinessError(f"Orden con ID {order_id} no encontrada")
-    if order.status != 'draft':
-        raise BusinessError(f"Solo se pueden modificar órdenes en estado 'draft'")
+    if order.status != 'draft' and order.status != 'check':
+        raise BusinessError(f"Solo se pueden modificar órdenes en estado 'draft' o 'check'")
     new_item=order_repo.update_order_item(order_id,product_id,new_quantity)
     if not new_item:
         raise BusinessError(f"Item con product_id {product_id} no encontrado en la orden {order_id}")
@@ -199,8 +206,8 @@ def delete_order_item(session: Session , order_id : int , product_id : int ) -> 
     order = order_repo.get_order_by_id(order_id)
     if not order:
         raise BusinessError(f"Orden con ID {order_id} no encontrada")
-    if order.status != 'draft':
-        raise BusinessError(f"Solo se pueden modificar órdenes en estado 'draft'")
+    if order.status != 'draft' and order.status != 'check':
+        raise BusinessError(f"Solo se pueden modificar órdenes en estado 'draft' o 'check' ")
     success=order_repo.delete_order_item(order_id,product_id)
     if not success:
         raise BusinessError(f"Item con product_id {product_id} no encontrado en la orden {order_id}")
@@ -249,23 +256,43 @@ def cancel_order(session: Session, order_id:int) -> Order:
         raise BusinessError(f"Orden con ID {order_id} no encontrada")
     if order.status != 'check' and order.status != 'draft':
         raise BusinessError(f"Solo se pueden cancelar órdenes en estado 'check' o 'draft'")
-    
     order_items = order_repo.get_order_items(order_id)
-    
-    # Solo liberamos el inventario si la orden está en estado 'check', ya que
-    # las órdenes en estado 'draft' no han reservado inventario todavía
     if order.status == 'check':
         for item in order_items:
             success_1 = inventory_repo.release_reserved_stock(item.product_id, item.quantity)
             if not success_1:
                 raise BusinessError(f"No se pudo liberar la reserva para el producto ID {item.product_id}")
-    
-    # Eliminamos los items de la orden independientemente del estado
     for item in order_items:
         success_2 = order_repo.delete_order_item(item.order_id, item.product_id)
         if not success_2:
             raise BusinessError(f"No se pudo eliminar el item con product_id {item.product_id} de la orden {order_id}")
-    
     order_repo.update_order_status(order_id, "canceled")
     session.commit()
     return order
+
+def add_order_item(session: Session, order_id: int, product_id: int , quantity: int)-> list[OrderItem]:
+    order_repo = OrderRepository(session)
+    product_repo = ProductRepository(session)
+    order = order_repo.get_order_by_id(order_id)
+    if not order:
+        raise BusinessError(f"Orden con ID {order_id} no encontrada")
+    if order.status != 'draft' and order.status != 'check':
+        raise BusinessError(f"Solo se pueden modificar órdenes en estado 'draft' o 'check'")
+    product=product_repo.get_product_by_id(product_id)
+    if not product:
+        raise ProductNotFoundError(
+            message=f"Producto con ID {product_id} no encontrado",
+            product_id=product_id
+        )
+    unit_price= product.price
+    sub_total = unit_price * quantity
+    oi = order_repo.create_order_item(order.order_id,[{ # type: ignore
+        "product_id":product_id,
+        "quantity":quantity,
+        "unit_price":unit_price,
+        "sub_total":sub_total
+    }])
+    order.total += sub_total
+    order=order_repo.update_order_status(order_id,'draft')
+    return oi
+    

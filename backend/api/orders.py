@@ -10,8 +10,10 @@ from schemas.create_order import (
     CreateOrderResponse ,
     EditOrderItemRequest, 
     OrderItemResponse,
+    OrderByIdResponse,
     OrdenStatus,
     CreateOrderResponse , 
+    AddOrderItemRequest,
     InsufficientStockError as InsufficientStockErrorSchema,
     ProductNotFoundError as ProductNotFoundErrorSchema,
     OrderListResponse)
@@ -26,10 +28,13 @@ from services.orders_service import (
     edit_order_item,
     get_order_details,
     get_user_orders,
+    get_order_by_id,
     InsufficientStockError,
     ProductNotFoundError,
-    cancel_order
+    cancel_order,
+    add_order_item
 )
+from services.products_service import get_product_by_id
 from core.config import settings
 from fastapi.security import OAuth2PasswordBearer
 
@@ -229,6 +234,42 @@ def delete_order_item_endpoint(
         delete_order_item(session, order_id, item_id)
     except BusinessError as be:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(be))
+    
+@router.post("/{order_id}/item",response_model=OrderItemResponse,status_code=status.HTTP_201_CREATED)
+def add_order_item_endpoint(
+    order_id: int,
+    item: AddOrderItemRequest,
+    session: Session = Depends(get_session),
+    user_id: int = Depends(verify_token)
+):
+    try:
+        data=item.model_dump()
+        order_item_added = add_order_item(session, order_id,data["product_id"],data['quantity'])
+        product = get_product_by_id(session, data["product_id"])
+        return OrderItemResponse(
+            order_item_id=order_item_added[0].order_item_id,  # type: ignore
+            product_id=order_item_added[0].product_id,
+            product_title=product.title if product else "Unknown",
+            quantity=order_item_added[0].quantity,
+            unit_price=order_item_added[0].unit_price,
+            sub_total=order_item_added[0].sub_total
+        )
+    except BusinessError as be:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(be))
+
+@router.get("/{order_id}",response_model=OrderByIdResponse,tags=["Orders (Obtener Pedido por ID)"])
+def get_order_by_id_endpoint(
+    order_id:int,
+    session:Session=Depends(get_session),
+    user_id:int=Depends(verify_token)
+):
+    try:
+        order=get_order_by_id(session,order_id)
+        return order
+    except BusinessError as be:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(be))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 @router.get("/user/{user_id}", response_model=OrderListResponse, tags=["Orders (Listar Pedidos)"])
 def get_user_orders_endpoint(
