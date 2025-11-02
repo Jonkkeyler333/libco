@@ -10,11 +10,14 @@
 
 .page-title {
   margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
 }
 
 .page-title h1 {
   font-size: 1.8rem;
   color: #333;
+  width: 91.6%;
 }
 
 /* Estilos para la barra de búsqueda */
@@ -144,6 +147,46 @@
 .btn-update:disabled {
   background-color: #a5a6f6;
   cursor: not-allowed;
+}
+
+/* Estilos para el formulario de agregar libro */
+.add-book-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group input,
+.form-group select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #646cff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
 }
 
 /* Estilos para la tabla de productos */
@@ -334,4 +377,193 @@ tbody tr:hover {
 
 .close-error-btn:hover {
   background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;  left: 0;  right: 0;  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: block;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;  
+  padding: 2rem 0;
+  overflow-y: hidden; 
+}
+
+.modal {
+  background: white;
+  padding: 2em;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  max-width: 700px;
+  width: 70%;
+  max-height: 85vh;
+  margin: 2vh;
+  display: grid;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.modal h3 {
+  color: #333;
+  margin-bottom: 1.5rem;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.modal-content {
+  width: 100%;
+  position: relative;
+  left: 40px;
+  margin-bottom: 1rem;
+  height: auto;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1rem 0;
+  background: white;
+  border-top: 1px solid #eee;
+  margin-top: auto;
+}
+
+.btn-cancel {
+  background-color: #e0e0e0;
+  color: #333;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-weight: 500;
+}
+
+.btn-cancel:hover {
+  background-color: #d0d0d0;
+}
+
+.btn-confirm {
+  background-color: #646cff;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-weight: 500;
+}
+
+.btn-confirm:hover {
+  background-color: #535bf2;
+}
+
+.btn-confirm:disabled {
+  background-color: #a5a6f6;
+  cursor: not-allowed;
+}
+
+/* Add book form specific styles */
+.add-book-form {
+  display: block;
+  flex-direction: column;
+  width: 100%;
+}
+
+.form-row {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+}
+
+.form-group {
+  display: table-cell;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0; /* Evita que los inputs se desborden */
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #444;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 0.6rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Para filas que ocupan todo el ancho */
+.form-row-full {
+  grid-template-columns: 1fr !important;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #646cff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(100, 108, 255, 0.15);
+}
+
+.form-group input:hover,
+.form-group select:hover {
+  border-color: #646cff;
+}
+
+/* Required field indicator */
+.form-group label::after {
+  content: "*";
+  color: #d32f2f;
+  margin-left: 4px;
+}
+
+.form-group label[for="format"]::after,
+.form-group label[for="language"]::after {
+  content: "";
+}
+
+/* Form textarea styles */
+.form-textarea {
+  width: 100% !important;
+  min-height: 80px;
+  resize: vertical;
+  line-height: 1.5;
+  font-family: inherit;
+}
+
+/* Number input styles */
+.form-group input[type="number"] {
+  appearance: textfield;
+  -webkit-appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.form-group input[type="number"]::-webkit-outer-spin-button,
+.form-group input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Full width form rows */
+.form-row-full {
+  display: flex !important;
+  grid-template-columns: 1fr !important;
 }

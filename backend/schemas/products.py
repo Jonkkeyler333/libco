@@ -21,7 +21,7 @@ class ProductBase(BaseModel):
     currency: str
     weight: float 
     dimensions: str
-    front_page_url: str 
+    front_page_url: str | None = None
     class Config:
         schema_extra = {
             "example": {

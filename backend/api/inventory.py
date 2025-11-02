@@ -77,3 +77,57 @@ def update_inventory(
         )
 
     return responses
+
+@router.post("/add-inventory", response_model=ListInventoryUpdateResponse)
+def add_inventory(
+    inventory_data: dict,
+    session=Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+
+    try:
+        # Validar campos requeridos
+        if not inventory_data.get("product_id"):
+            raise HTTPException(
+                status_code=400,
+                detail="El campo product_id es requerido"
+            )
+        
+        # Obtener el producto
+        product = session.get(Product, inventory_data.get("product_id"))
+        if not product:
+            raise HTTPException(
+                status_code=404,
+                detail="Producto no encontrado"
+            )
+
+        # Crear entrada de inventario
+        inventory = Inventory(
+            product_id=product.product_id,
+            quantity=int(inventory_data.get("quantity", 0)),
+            reserved=0,
+            last_updated=datetime.now(timezone.utc)
+        )
+
+        session.add(inventory)
+        session.commit()
+        session.refresh(inventory)
+
+        return ListInventoryUpdateResponse(
+            title=product.title,
+            quantity=inventory.quantity
+        )
+        
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="Cantidad inválida"
+        )
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al crear el inventario: {str(e)}"
+        )
