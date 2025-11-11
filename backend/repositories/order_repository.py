@@ -100,3 +100,11 @@ class OrderRepository:
             self.session.commit()
             return True
         return False        
+    
+    def get_order_by_period(self,start_data:datetime,end_date_:datetime) -> list[Order]:
+        statement = (
+            select(Order)
+            .where(Order.created_at >= start_data)
+            .where(Order.created_at <= end_date_)
+        )
+        return list(self.session.exec(statement).all())

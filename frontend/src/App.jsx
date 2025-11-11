@@ -12,6 +12,7 @@ import InventoryPage from './pages/InventoryPage';
 import OrderManagePage from './pages/OrderManagePage';
 import OrderHistoryPage from './pages/OrderHistoryPage';
 import EditOrderPage from './pages/EditOrderPage';
+import ReportPage from './pages/ReportPage';
 
 // Ruta protegida que requiere autenticación
 const ProtectedRoute = ({ element }) => {
@@ -109,7 +110,7 @@ function AppContent() {
         
         {/* Rutas solo para administradores */}
         <Route path="/inventario" element={<AdminRoute element={<InventoryPage/>} />} />
-        <Route path="/reportes" element={<AdminRoute element={<Dashboard />} />} />
+        <Route path="/reportes" element={<AdminRoute element={<ReportPage />} />} />
         <Route path="/usuarios" element={<AdminRoute element={<Dashboard />} />} />
         <Route path="/editar-pedido/:id" element={<ClientRoute element={<EditOrderPage />} />} />
         

@@ -4,10 +4,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional, Dict, Any , Annotated
 from schemas.products import ProductsResponse
 from db.database import get_session
-
 from services.products_service import get_products
-
-
 from core.config import settings
 from fastapi.security import OAuth2PasswordBearer
 from services.auth_service import verify_token as verify_token_service

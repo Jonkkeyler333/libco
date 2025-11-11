@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 from sqlmodel import Session, select
 from sqlalchemy import desc
 from datetime import datetime, timezone
@@ -77,3 +77,8 @@ class InventoryRepository:
         if inventory:
             return inventory.quantity - inventory.reserved
         return None
+
+    def get_all_reserverd_quantity(self) -> Tuple[list[int], list[int]]:
+        statement = select(Inventory).where(Inventory.reserved > 0)
+        elements = list(self.session.exec(statement).all())
+        return [inv.product_id for inv in elements], [inv.reserved for inv in elements]

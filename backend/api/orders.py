@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from datetime import datetime, timezone, timedelta
 from typing import Optional, Dict, Any , Annotated
+from fastapi.responses import StreamingResponse
+from io import BytesIO
 
 from db.database import get_session
 from schemas.create_order import (
@@ -29,6 +31,7 @@ from services.orders_service import (
     get_order_details,
     get_user_orders,
     get_order_by_id,
+    get_order_pdf,
     InsufficientStockError,
     ProductNotFoundError,
     cancel_order,
@@ -286,15 +289,11 @@ def get_user_orders_endpoint(
     - **page**: Número de página (default: 1)
     - **page_size**: Número de pedidos por página (default: 10, max: 50)
     """
-    # Validar que el usuario solo pueda ver sus propios pedidos (o ser admin)
     if current_user_id != user_id:
-        # TODO: Verificar si el usuario actual es admin
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No tienes permisos para ver los pedidos de otro usuario"
         )
-    
-    # Validar parámetros de paginación
     if page < 1:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -314,4 +313,38 @@ def get_user_orders_endpoint(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al obtener los pedidos: {str(e)}"
+        )
+
+@router.get("/{order_id}/document")
+def get_order_document_endpoint(
+    order_id: int,
+    session: Session = Depends(get_session),
+    user_id: int = Depends(verify_token)
+):
+    """
+    Obtener el documento PDF del pedido.
+    
+    - **order_id**: ID del pedido
+    """
+    try:
+        pdf_buffer = get_order_pdf(session, order_id)
+        if pdf_buffer is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Orden no encontrada o error generando PDF"
+            )
+        headers = {
+            'Content-Disposition': f'attachment; filename="LibCo_Orden_{order_id}.pdf"'
+        }
+        return StreamingResponse(
+            iter([pdf_buffer.getvalue()]), 
+            media_type='application/pdf', 
+            headers=headers
+        )
+    except BusinessError as be:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(be))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener el documento del pedido: {str(e)}"
         )

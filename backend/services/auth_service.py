@@ -46,3 +46,13 @@ def verify_token(token: str) -> dict:
             detail="Token inválido",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+def verify_admin_role(token: str) -> None:
+    """Verify if the user has admin role"""
+    payload = verify_token(token)
+    role: str = payload.get("role")
+    if role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permisos insuficientes",
+        )

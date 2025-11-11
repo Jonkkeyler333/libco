@@ -5,6 +5,7 @@ import { orderService } from '../services/orderService';
 import '../styles/OrderHistory.css';
 
 const OrderHistoryPage = () => {
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
   const { user, token } = useAuth();
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
@@ -63,6 +64,32 @@ const OrderHistoryPage = () => {
 
   const formatPrice = (price) => {
     return `$${price.toFixed(2)}`;
+  };
+
+  const handleOrder = async (orderId) => {
+    const headers = {};
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    const response = await fetch(`${API_URL}/api/orders/${orderId}/document`, {
+      method: 'GET',
+      headers
+    });
+    if (response.ok) {
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `orden-${orderId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } else {
+      throw new Error('Error al descargar el PDF');
+    }
+    alert('El pdf de la orden se ha descargado correctamente.');
+    
   };
 
   const getStatusDisplay = (status) => {
@@ -162,7 +189,8 @@ const OrderHistoryPage = () => {
                         </div>
                       )}
                       <div className="order-actions">
-                        <button className="view-details-button">
+                        <button className="view-details-button"
+                        onClick={() => handleOrder(order.order_id)}>
                           📄 Ver Orden de Pedido
                         </button>
                       </div>
@@ -170,8 +198,6 @@ const OrderHistoryPage = () => {
                   </div>
                 ))}
               </div>
-
-              {/* Paginación */}
               {pagination.total_pages > 1 && (
                 <div className="pagination">
                   <button 

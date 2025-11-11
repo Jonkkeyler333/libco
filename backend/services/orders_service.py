@@ -7,6 +7,14 @@ import math
 from models.product import Product
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Tuple, TypedDict
+from io import BytesIO
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+from repositories.user_repository import UserRepository
+from repositories.product_repository import ProductRepository
+import os
 
 class OrderItemDetail(TypedDict):
     order_item_id: int
@@ -295,4 +303,158 @@ def add_order_item(session: Session, order_id: int, product_id: int , quantity: 
     order.total += sub_total
     order=order_repo.update_order_status(order_id,'draft')
     return oi
-    
+
+def get_order_pdf(session: Session, order_id: int):
+    """
+    Genera un PDF estético y limpio para la orden con logo de LibCo.
+    """
+    try:
+        user_repo = UserRepository(session)
+        product_repo = ProductRepository(session)
+        order, order_details = get_order_details(session, order_id)
+        customer = user_repo.get_user_by_id(order.user_created)
+        if not order:
+            return None
+        buffer = BytesIO()
+        c = canvas.Canvas(buffer, pagesize=A4)
+        width, height = A4
+        primary_color = colors.Color(0.149, 0.388, 0.918)
+        text_color = colors.Color(0.122, 0.161, 0.216) 
+        light_gray = colors.Color(0.953, 0.957, 0.965)
+        logo_path = os.path.join(os.path.dirname(__file__), '..', 'media', 'libco_logo.png')
+        if os.path.exists(logo_path):
+            try:
+                c.drawImage(logo_path, (width - 150) / 2, height - 120, width=150, height=60, preserveAspectRatio=True)
+            except Exception as e:
+                print(f"Error cargando logo: {e}")
+                c.setFont("Helvetica-Bold", 20)
+                c.setFillColor(primary_color)
+                c.drawString((width - c.stringWidth("LIBCO", "Helvetica-Bold", 20)) / 2, height - 80, "📚 LIBCO")
+        c.setFont("Helvetica-Bold", 18)
+        c.setFillColor(primary_color)
+        title_text = "Recibo de Orden de Compra"
+        title_width = c.stringWidth(title_text, "Helvetica-Bold", 18)
+        c.drawString((width - title_width) / 2, height - 150, title_text)
+        box_y = height - 200
+        box_height = 120
+        c.setFillColor(light_gray)
+        c.rect(50, box_y - box_height, width - 100, box_height, fill=1, stroke=0)
+        c.setStrokeColor(primary_color)
+        c.setLineWidth(2)
+        c.rect(50, box_y - box_height, width - 100, box_height, fill=0, stroke=1)
+        
+        # Información de la orden
+        c.setFillColor(text_color)
+        c.setFont("Helvetica-Bold", 12)
+        info_x = 70
+        info_y = box_y - 25
+        
+        c.drawString(info_x, info_y, f"📦 Orden: #{order.order_id}")
+        c.drawString(info_x + 200, info_y, f"📅 Fecha: {order.created_at.strftime('%d/%m/%Y')}")
+        
+        c.drawString(info_x, info_y - 20, f"👤 Cliente: {customer.name} {customer.last_name}")
+        c.drawString(info_x + 200, info_y - 20, f"📧 {customer.email}")
+        
+        # Estado con color
+        status_text = _get_status_display(order.status)
+        status_color = _get_status_color(order.status)
+        c.setFillColor(status_color)
+        c.drawString(info_x, info_y - 40, f"🔄 Estado: {status_text}")
+        
+        # ID Cliente
+        c.setFillColor(text_color)
+        c.drawString(info_x + 200, info_y - 40, f"🆔 ID: #{customer.ID}")
+
+        # 📚 Tabla de productos
+        table_y = height - 350
+        
+        # Header de tabla
+        c.setFillColor(primary_color)
+        c.rect(50, table_y, width - 100, 25, fill=1)
+        
+        c.setFillColor(colors.white)
+        c.setFont("Helvetica-Bold", 11)
+        c.drawString(70, table_y + 8, "📖 Producto")
+        c.drawString(350, table_y + 8, "Cantidad")
+        c.drawString(420, table_y + 8, "Precio Unit.")
+        c.drawString(490, table_y + 8, "Subtotal")
+        
+        # Productos
+        y_pos = table_y - 5
+        c.setFillColor(text_color)
+        c.setFont("Helvetica", 10)
+        total_items = 0
+        
+        for i, item in enumerate(order_details):
+            y_pos -= 20
+            product = product_repo.get_product_by_id(item['product_id'])
+            product_name = product.title if product and hasattr(product, 'title') else item['product_title']
+            
+            # Alternar color de fondo
+            if i % 2 == 0:
+                c.setFillColor(colors.Color(0.99, 0.99, 0.99))
+                c.rect(50, y_pos - 2, width - 100, 16, fill=1, stroke=0)
+            
+            c.setFillColor(text_color)
+            # Limitar nombre del producto
+            if len(product_name) > 35:
+                product_name = product_name[:32] + "..."
+            
+            c.drawString(70, y_pos, product_name)
+            c.drawString(360, y_pos, str(item['quantity']))
+            c.drawString(420, y_pos, f"${item['unit_price']:,.0f}")
+            c.drawString(490, y_pos, f"${item['sub_total']:,.0f}")
+            
+            total_items += item['quantity']
+        total_y = y_pos - 40
+        c.setFillColor(colors.Color(0.023, 0.722, 0.412))  # Verde #059669
+        c.rect(350, total_y - 5, 200, 30, fill=1)
+        c.setFillColor(colors.white)
+        c.setFont("Helvetica-Bold", 14)
+        c.drawString(360, total_y + 8, f"TOTAL: ${order.total:,.0f} COP")
+        c.setFillColor(text_color)
+        c.setFont("Helvetica", 10)
+        c.drawString(360, total_y - 20, f"Total items: {total_items}")
+        footer_y = 80
+        c.setFont("Helvetica", 9)
+        c.setFillColor(colors.Color(0.4, 0.4, 0.4))
+        footer_text_1 = "¡Gracias por confiar en LibCo!"
+        footer_width_1 = c.stringWidth(footer_text_1, "Helvetica", 9)
+        c.drawString((width - footer_width_1) / 2, footer_y, footer_text_1)
+        footer_text_2 = f"Generado el {datetime.now().strftime('%d/%m/%Y %H:%M')}"
+        footer_width_2 = c.stringWidth(footer_text_2, "Helvetica", 9)
+        c.drawString((width - footer_width_2) / 2, footer_y - 15, footer_text_2)
+        
+        footer_text_3 = "LibCo - Sistema de Gestión de Libros"
+        footer_width_3 = c.stringWidth(footer_text_3, "Helvetica", 9)
+        c.drawString((width - footer_width_3) / 2, footer_y - 30, footer_text_3)
+
+        c.showPage()
+        c.save()
+        buffer.seek(0)
+        return buffer
+
+    except Exception as e:
+        print(f"❌ Error generando PDF: {e}")
+        return None
+
+
+def _get_status_display(status: str) -> str:
+    """Convierte el status a texto amigable."""
+    status_map = {
+        'draft': 'Borrador',
+        'check': 'En Validación', 
+        'completed': 'Completado',
+        'canceled': 'Cancelado'
+    }
+    return status_map.get(status, status.title())
+
+def _get_status_color(status: str):
+    """Retorna color según el estado."""
+    color_map = {
+        'draft': colors.Color(0.945, 0.624, 0.043),
+        'check': colors.Color(0.149, 0.388, 0.918),
+        'completed': colors.Color(0.023, 0.722, 0.412), 
+        'canceled': colors.Color(0.937, 0.267, 0.267)  
+    }
+    return color_map.get(status, colors.Color(0.4, 0.4, 0.4))

@@ -7,6 +7,7 @@ import Header from '../components/layout/Header';
 import StatsCard from '../components/ui/StatsCard';
 import ProductGrid from '../components/ui/ProductGrid';
 import { productService } from '../services/productService';
+import KPICards  from '../components/reports/KPICards';
 
 const Dashboard = () => {
   const { user ,isAdmin } = useAuth();
@@ -20,24 +21,15 @@ const Dashboard = () => {
     const loadDashboard = async () => {
       try {
         setLoading(true);
-        
-        // Get the JWT token from localStorage
         const token = localStorage.getItem('auth_token');
-        
-        // Obtener productos reales de la API
         const productsData = await productService.getAllProducts(token);
         console.log('Productos cargados de API:', productsData);
-        
-        // Verificar si tenemos productos
         if (productsData && productsData.length > 0) {
-          // Marcar algunos productos como populares (simulado)
           const popular = productsData.slice(0, Math.min(4, productsData.length)).map(p => ({
             ...p, 
             is_popular: true
           }));
           setPopularProducts(popular);
-          
-          // Marcar algunos productos como ofertas (simulado)
           const discounted = [...productsData]
             .sort(() => 0.5 - Math.random())
             .slice(0, Math.min(4, productsData.length))
@@ -47,14 +39,12 @@ const Dashboard = () => {
             }));
           setLatestProducts(discounted);
         } else {
-          // fallback a datos de muestra si la API no devuelve productos
           const mockBooks = [
             { product_id: 1, title: 'El Manifiesto Comunista', author: 'Karl Marx y Friedrich Engels', price: 9.99, front_page_url: '/libco_logo.png' },
             { product_id: 2, title: 'Así habló Zaratustra', author: 'Friedrich Nietzsche', price: 16.99, front_page_url: '/libco_logo.png' },
             { product_id: 3, title: 'El Capital', author: 'Karl Marx', price: 24.99, front_page_url: '/libco_logo.png' },
             { product_id: 4, title: 'El segundo sexo', author: 'Simone de Beauvoir', price: 22.99, front_page_url: '/libco_logo.png' },
           ];
-          
           setPopularProducts(mockBooks.slice(0, 3).map(p => ({ ...p, is_popular: true })));
           setLatestProducts(mockBooks.slice(1, 4).map(p => ({ ...p, on_sale: true })));
           console.warn('Usando datos de muestra porque la API no devolvió productos');
@@ -89,7 +79,6 @@ const Dashboard = () => {
         {error && (
           <div className="error-message">{error}</div>
         )}
-       
         {!isAdmin() && (
           <div className="dashboard-container">
             <div className="welcome-section">
@@ -148,6 +137,7 @@ const Dashboard = () => {
                 Bienvenido admin : {user?.name || ''} {user?.last_name || ''}
               </p>
             </div>
+            <KPICards/>
         </div>
         )}
         
