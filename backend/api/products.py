@@ -36,3 +36,62 @@ def get_products_endpoint(
     products = get_products(session)
     compatible_products = [ProductBase.model_validate(p.model_dump()) for p in products]
     return ProductsResponse(products=compatible_products)
+
+@router.post("/create", response_model=ProductBase)
+def create_product_endpoint(
+    product: dict,
+    session: Session = Depends(get_session),
+    user_id: int = Depends(verify_token)
+):
+    from models.product import Product
+    
+    try:
+        new_product = Product(
+            sku=product["sku"],
+            title=product["title"],
+            author=product["author"],
+            isbn=product["isbn"],
+            format=product.get("format", "paperback"),
+            edition=product.get("edition", "1st"),
+            description=product.get("description"),
+            language=product.get("language", "es"),
+            publisher=product["publisher"],
+            publication_year=product["publication_year"],
+            price=product["price"],
+            pages=product["pages"],
+            currency=product.get("currency", "COP"),
+            weight=product["weight"],
+            dimensions=product.get("dimensions", "0x0x0"),
+            front_page_url=product.get("front_page_url"),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc)
+        )
+        
+        session.add(new_product)
+        session.commit()
+        session.refresh(new_product)
+        
+        return ProductBase(
+            product_id=new_product.product_id,
+            title=new_product.title,
+            author=new_product.author,
+            isbn=new_product.isbn,
+            format=new_product.format,
+            edition=new_product.edition,
+            description=new_product.description,
+            language=new_product.language,
+            publisher=new_product.publisher,
+            publication_year=new_product.publication_year,
+            price=new_product.price,
+            pages=new_product.pages,
+            currency=new_product.currency,
+            weight=new_product.weight,
+            dimensions=new_product.dimensions,
+            front_page_url=new_product.front_page_url
+        )
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al crear el producto: {str(e)}"
+        )    
