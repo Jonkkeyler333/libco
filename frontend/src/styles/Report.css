@@ -97,7 +97,150 @@
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  height: 400px; /* Altura fija para el gráfico */
+  height: 500px; /* Altura aumentada para mejor visualización */
+}
+
+/* 📊 Contenedor específico para gráficos de barras */
+.bar-chart-container {
+  background: white;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #10B981;
+}
+
+.bar-chart-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* 📋 Tabla de KPIs mejorada */
+.kpi-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+}
+
+.kpi-table th {
+  background: linear-gradient(135deg, #f8fafc 0%, #e5e7eb 100%);
+  color: #374151;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.kpi-table td {
+  padding: 1rem;
+  border-top: 1px solid #f3f4f6;
+  color: #1f2937;
+}
+
+.kpi-table tr:hover {
+  background: #f9fafb;
+}
+
+/* 💡 Nota informativa */
+.info-note {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  color: #92400e;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.info-note::before {
+  content: '💡';
+  font-size: 1rem;
+}
+
+/* 📊 Contenedor específico para gráficos de barras */
+.bar-chart-container {
+  background: white;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #10B981;
+}
+
+.bar-chart-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* 📋 Tabla de KPIs mejorada */
+.kpi-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+}
+
+.kpi-table th {
+  background: linear-gradient(135deg, #f8fafc 0%, #e5e7eb 100%);
+  color: #374151;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.kpi-table td {
+  padding: 1rem;
+  border-top: 1px solid #f3f4f6;
+  color: #1f2937;
+}
+
+.kpi-table tr:hover {
+  background: #f9fafb;
+}
+
+/* 💡 Nota informativa */
+.info-note {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  color: #92400e;
+  font-size: 0.9rem;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.info-note::before {
+  content: '💡';
+  font-size: 1rem;
 }
 
 /* 🔄 Estados de carga */

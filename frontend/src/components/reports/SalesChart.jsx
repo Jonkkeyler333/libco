@@ -3,56 +3,54 @@ import { Line } from 'react-chartjs-2';
 import { useAuth } from '../../context/AuthContext';
 import { reportService } from '../../services/reportService';
 import { CHART_COLORS, COMMON_CHART_OPTIONS } from '../../utils/chartConfig';
-import '../../utils/chartConfig';
 
 const SalesChart = () => {
-    const { user, token } = useAuth();
-    const [chartData, setChartData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-
+    const {user,token} = useAuth();
+    const [chartData, setChartData]=useState(null);
+    const [loading, setLoading]=useState(true);
+    const [error,setError]=useState(null);
     useEffect(() => {
         loadChartData();
     }, []);
 
     const loadChartData = async () => {
         try {
-        setLoading(true);
-        const monthlyData = await reportService.getMonthlyData(token,6);
-        console.log('Monthly data fetched for chart:', monthlyData);
-        const chartDataset = {
-            labels: monthlyData.map(item => item.month),
-            datasets: [
-            {
-                label: 'Ventas ($) COP',
-                data: monthlyData.map(item => item.total_sales),
-                borderColor: CHART_COLORS.primary,
-                backgroundColor: CHART_COLORS.primary + '20', 
-                borderWidth: 3,
-                pointBackgroundColor: CHART_COLORS.primary,
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                pointRadius: 6,
-                pointHoverRadius: 8,
-                tension: 0.4, // Líneas curvas suaves
-                fill: true,   // Rellenar área bajo la línea
-            },
-            {
-                label: 'Órdenes',
-                data: monthlyData.map(item => item.total_orders),
-                borderColor: CHART_COLORS.secondary,
-                backgroundColor: CHART_COLORS.secondary + '20',
-                borderWidth: 3,
-                pointBackgroundColor: CHART_COLORS.secondary,
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                pointRadius: 6,
-                pointHoverRadius: 8,
-                tension: 0.4,
-                yAxisID: 'y1', // Eje Y secundario para órdenes
-            }
-            ]
-        };
+            setLoading(true);
+            const monthlyData = await reportService.getMonthlyData(token,6);
+            console.log('Monthly data fetched for chart:', monthlyData);
+            const chartDataset = {
+                labels: monthlyData.map(item => item.month),
+                datasets:[
+                {
+                    label: 'Ventas ($) COP',
+                    data: monthlyData.map(item => item.total_sales),
+                    borderColor:CHART_COLORS.primary,
+                    backgroundColor:CHART_COLORS.primary + '20', 
+                    borderWidth: 3,
+                    pointBackgroundColor:CHART_COLORS.primary,
+                    pointBorderColor:'#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    tension: 0.4,
+                    fill: true,  
+                },
+                {
+                    label: 'Órdenes',
+                    data: monthlyData.map(item => item.total_orders),
+                    borderColor: CHART_COLORS.secondary,
+                    backgroundColor: CHART_COLORS.secondary + '20',
+                    borderWidth: 3,
+                    pointBackgroundColor: CHART_COLORS.secondary,
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    tension: 0.4,
+                    yAxisID: 'y1',
+                }
+                ]
+            };
             setChartData(chartDataset);
         } catch (err) {
             setError(err.message);
@@ -119,7 +117,7 @@ const SalesChart = () => {
             color: CHART_COLORS.secondary
             },
             grid: {
-            drawOnChartArea: false, // Solo muestra grid del eje Y principal
+            drawOnChartArea: false,
             },
         }
         },
@@ -156,11 +154,12 @@ const SalesChart = () => {
 
     return (
         <div className="sales-chart-container">
-        <div className="chart-wrapper">
-            {chartData && (
-            <Line data={chartData} options={chartOptions} />
-            )}
-        </div>
+            <h2 className="bar-chart-title">📈 Evolución de Ventas y Órdenes</h2>
+            <div className="chart-wrapper">
+                {chartData && (
+                <Line data={chartData} options={chartOptions} />
+                )}
+            </div>
         </div>
     );
 };

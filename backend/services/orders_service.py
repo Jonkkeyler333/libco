@@ -306,7 +306,7 @@ def add_order_item(session: Session, order_id: int, product_id: int , quantity: 
 
 def get_order_pdf(session: Session, order_id: int):
     """
-    Genera un PDF estético y limpio para la orden con logo de LibCo.
+    Genera un PDF para la orden.
     """
     try:
         user_repo = UserRepository(session)
@@ -332,7 +332,10 @@ def get_order_pdf(session: Session, order_id: int):
                 c.drawString((width - c.stringWidth("LIBCO", "Helvetica-Bold", 20)) / 2, height - 80, "📚 LIBCO")
         c.setFont("Helvetica-Bold", 18)
         c.setFillColor(primary_color)
-        title_text = "Recibo de Orden de Compra"
+        if order.status == "canceled":
+            title_text = "Comprobante de orden cancelada"
+        else:
+            title_text = "Recibo de Orden de Compra"
         title_width = c.stringWidth(title_text, "Helvetica-Bold", 18)
         c.drawString((width - title_width) / 2, height - 150, title_text)
         box_y = height - 200
@@ -342,89 +345,74 @@ def get_order_pdf(session: Session, order_id: int):
         c.setStrokeColor(primary_color)
         c.setLineWidth(2)
         c.rect(50, box_y - box_height, width - 100, box_height, fill=0, stroke=1)
-        
-        # Información de la orden
         c.setFillColor(text_color)
         c.setFont("Helvetica-Bold", 12)
         info_x = 70
         info_y = box_y - 25
-        
-        c.drawString(info_x, info_y, f"📦 Orden: #{order.order_id}")
-        c.drawString(info_x + 200, info_y, f"📅 Fecha: {order.created_at.strftime('%d/%m/%Y')}")
-        
-        c.drawString(info_x, info_y - 20, f"👤 Cliente: {customer.name} {customer.last_name}")
-        c.drawString(info_x + 200, info_y - 20, f"📧 {customer.email}")
-        
-        # Estado con color
+        c.drawString(info_x, info_y, f"Orden: #{order.order_id}")
+        c.drawString(info_x + 200, info_y, f"Fecha: {order.created_at.strftime('%d/%m/%Y')}")  
+        c.drawString(info_x, info_y - 20, f"Cliente: {customer.name} {customer.last_name}")
+        c.drawString(info_x + 200, info_y - 20, f"{customer.email}")
         status_text = _get_status_display(order.status)
         status_color = _get_status_color(order.status)
         c.setFillColor(status_color)
-        c.drawString(info_x, info_y - 40, f"🔄 Estado: {status_text}")
-        
-        # ID Cliente
+        c.drawString(info_x, info_y - 40, f"Estado: {status_text}")
         c.setFillColor(text_color)
-        c.drawString(info_x + 200, info_y - 40, f"🆔 ID: #{customer.ID}")
-
-        # 📚 Tabla de productos
+        c.drawString(info_x + 200, info_y - 40, f"ID: #{customer.ID}")
         table_y = height - 350
-        
-        # Header de tabla
         c.setFillColor(primary_color)
         c.rect(50, table_y, width - 100, 25, fill=1)
-        
         c.setFillColor(colors.white)
         c.setFont("Helvetica-Bold", 11)
-        c.drawString(70, table_y + 8, "📖 Producto")
+        c.drawString(70, table_y + 8, "Producto")
         c.drawString(350, table_y + 8, "Cantidad")
         c.drawString(420, table_y + 8, "Precio Unit.")
         c.drawString(490, table_y + 8, "Subtotal")
-        
-        # Productos
         y_pos = table_y - 5
         c.setFillColor(text_color)
         c.setFont("Helvetica", 10)
         total_items = 0
-        
-        for i, item in enumerate(order_details):
-            y_pos -= 20
-            product = product_repo.get_product_by_id(item['product_id'])
-            product_name = product.title if product and hasattr(product, 'title') else item['product_title']
-            
-            # Alternar color de fondo
-            if i % 2 == 0:
-                c.setFillColor(colors.Color(0.99, 0.99, 0.99))
-                c.rect(50, y_pos - 2, width - 100, 16, fill=1, stroke=0)
-            
+        if order.status == "canceled":
+            c.setFillColor(colors.red)
+            c.setFont("Helvetica-Bold", 16)
+            canceled_text = "¡ORDEN CANCELADA!"
+            canceled_width = c.stringWidth(canceled_text, "Helvetica-Bold", 16)
+            c.drawString((width - canceled_width) / 2, y_pos - 30, canceled_text)
+            y_pos -= 40
+        else:
+            for i, item in enumerate(order_details):
+                y_pos -= 20
+                product = product_repo.get_product_by_id(item['product_id'])
+                product_name = product.title if product and hasattr(product, 'title') else item['product_title']
+                if i % 2 == 0:
+                    c.setFillColor(colors.Color(0.99, 0.99, 0.99))
+                    c.rect(50, y_pos - 2, width - 100, 16, fill=1, stroke=0)
+                c.setFillColor(text_color)
+                if len(product_name) > 35:
+                    product_name = product_name[:32] + "..."
+                c.drawString(70, y_pos, product_name)
+                c.drawString(360, y_pos, str(item['quantity']))
+                c.drawString(420, y_pos, f"${item['unit_price']:,.0f}")
+                c.drawString(490, y_pos, f"${item['sub_total']:,.0f}")
+                total_items += item['quantity']
+            total_y = y_pos - 40
+            c.setFillColor(colors.Color(0.023, 0.722, 0.412))  # Verde #059669
+            c.rect(350, total_y - 5, 200, 30, fill=1)
+            c.setFillColor(colors.white)
+            c.setFont("Helvetica-Bold", 14)
+            c.drawString(360, total_y + 8, f"TOTAL: ${order.total:,.0f} COP")
             c.setFillColor(text_color)
-            # Limitar nombre del producto
-            if len(product_name) > 35:
-                product_name = product_name[:32] + "..."
-            
-            c.drawString(70, y_pos, product_name)
-            c.drawString(360, y_pos, str(item['quantity']))
-            c.drawString(420, y_pos, f"${item['unit_price']:,.0f}")
-            c.drawString(490, y_pos, f"${item['sub_total']:,.0f}")
-            
-            total_items += item['quantity']
-        total_y = y_pos - 40
-        c.setFillColor(colors.Color(0.023, 0.722, 0.412))  # Verde #059669
-        c.rect(350, total_y - 5, 200, 30, fill=1)
-        c.setFillColor(colors.white)
-        c.setFont("Helvetica-Bold", 14)
-        c.drawString(360, total_y + 8, f"TOTAL: ${order.total:,.0f} COP")
-        c.setFillColor(text_color)
-        c.setFont("Helvetica", 10)
-        c.drawString(360, total_y - 20, f"Total items: {total_items}")
-        footer_y = 80
+            c.setFont("Helvetica", 10)
+            c.drawString(360, total_y - 20, f"Total items: {total_items}")
         c.setFont("Helvetica", 9)
         c.setFillColor(colors.Color(0.4, 0.4, 0.4))
+        footer_y = 80
         footer_text_1 = "¡Gracias por confiar en LibCo!"
         footer_width_1 = c.stringWidth(footer_text_1, "Helvetica", 9)
         c.drawString((width - footer_width_1) / 2, footer_y, footer_text_1)
         footer_text_2 = f"Generado el {datetime.now().strftime('%d/%m/%Y %H:%M')}"
         footer_width_2 = c.stringWidth(footer_text_2, "Helvetica", 9)
         c.drawString((width - footer_width_2) / 2, footer_y - 15, footer_text_2)
-        
         footer_text_3 = "LibCo - Sistema de Gestión de Libros"
         footer_width_3 = c.stringWidth(footer_text_3, "Helvetica", 9)
         c.drawString((width - footer_width_3) / 2, footer_y - 30, footer_text_3)
@@ -435,7 +423,7 @@ def get_order_pdf(session: Session, order_id: int):
         return buffer
 
     except Exception as e:
-        print(f"❌ Error generando PDF: {e}")
+        print(f"Error generando PDF: {e}")
         return None
 
 

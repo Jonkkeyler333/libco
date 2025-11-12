@@ -7,7 +7,7 @@ from core.config import settings
 from api.auth import get_current_user
 from schemas.auth import UserResponse
 from schemas.reports import GetKPIsRequest , KPIsResponse
-from services.KPIs import total_sales_period,order_status_counts
+from services.KPIs import total_sales_period,order_status_counts,top_selling_products
 
 router = APIRouter(prefix="/reports", tags=["Reportes y KPIs"])
 
@@ -34,9 +34,11 @@ async def get_kpis_report(
         )
     total_sales, total_orders, avg_order_value = total_sales_period(session, start_date, end_date)
     order_status = order_status_counts(session, start_date, end_date)
+    top_products = top_selling_products(session, start_date, end_date)
     return KPIsResponse(
         total_sales=total_sales,
         total_orders=total_orders,
         average_order_value=avg_order_value,
-        order_status_counts=order_status
+        order_status_counts=order_status,
+        top_selling_products=top_products
     )

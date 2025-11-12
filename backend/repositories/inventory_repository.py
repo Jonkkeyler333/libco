@@ -82,3 +82,12 @@ class InventoryRepository:
         statement = select(Inventory).where(Inventory.reserved > 0)
         elements = list(self.session.exec(statement).all())
         return [inv.product_id for inv in elements], [inv.reserved for inv in elements]
+    
+    def get_reserved_inventory_by_period(self, start_date: datetime, end_date: datetime) -> Tuple[list[int], list[int]]:
+        statement = select(Inventory).where(
+            Inventory.last_updated >= start_date,
+            Inventory.last_updated <= end_date,
+            Inventory.reserved > 0
+        ).order_by(Inventory.reserved.desc())
+        elements = list(self.session.exec(statement).all())
+        return [inv.product_id for inv in elements], [inv.reserved for inv in elements]

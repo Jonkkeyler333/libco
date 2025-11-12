@@ -89,7 +89,6 @@ const OrderHistoryPage = () => {
       throw new Error('Error al descargar el PDF');
     }
     alert('El pdf de la orden se ha descargado correctamente.');
-    
   };
 
   const getStatusDisplay = (status) => {

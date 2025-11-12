@@ -35,8 +35,6 @@ const Sidebar = () => {
               <span className="nav-icon">📊</span>
               {!isCollapsed && <span className="nav-label">Panel Principal</span>}
             </Link>
-            
-            {/* Opciones solo para clientes (no admin) */}
             {!isAdmin() && (
               <>
                 <Link to="/crear-pedido" className={`nav-item ${location.pathname === '/crear-pedido' ? 'active' : ''}`}>
@@ -53,7 +51,6 @@ const Sidebar = () => {
                 </Link>
               </>
             )}
-            
             {/* Opciones solo para administradores */}
             {isAdmin() && (
               <>
@@ -62,12 +59,12 @@ const Sidebar = () => {
                   {!isCollapsed && <span className="nav-label">Inventario</span>}
                 </Link>
                 <Link to="/reportes" className={`nav-item ${location.pathname === '/reportes' ? 'active' : ''}`}>
-                  <span className="nav-icon">📊</span>
+                  <span className="nav-icon">📑</span>
                   {!isCollapsed && <span className="nav-label">Reportes</span>}
                 </Link>
                 <Link to="/usuarios" className={`nav-item ${location.pathname === '/usuarios' ? 'active' : ''}`}>
-                  <span className="nav-icon">👥</span>
-                  {!isCollapsed && <span className="nav-label">Gestión de Usuarios</span>}
+                  <span className="nav-icon">🔍</span>
+                  {!isCollapsed && <span className="nav-label">Auditoría</span>}
                 </Link>
               </>
             )}

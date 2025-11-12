@@ -1,5 +1,3 @@
-/* Estilos para CreateOrderPage */
-
 .create-inventory-container {
   padding: 1.5rem;
   background-color: #fff;
@@ -379,55 +377,60 @@ tbody tr:hover {
   background-color: rgba(0, 0, 0, 0.1);
 }
 
-/* Modal Styles */
+/* Modal Styles - Corregido */
 .modal-overlay {
   position: fixed;
-  top: 0;  left: 0;  right: 0;  bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
-  display: block;
+  display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;  
-  padding: 2rem 0;
-  overflow-y: hidden; 
+  z-index: 1000;
+  padding: 1rem;
+  overflow-y: auto;
 }
 
 .modal {
   background: white;
-  padding: 2em;
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  max-width: 700px;
-  width: 70%;
-  max-height: 85vh;
-  margin: 2vh;
-  display: grid;
+  max-width: 800px;
+  width: 95%;
+  max-height: 90vh;
+  margin: auto;
+  display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  overflow: hidden;
+  position: relative;
 }
 
 .modal h3 {
   color: #333;
-  margin-bottom: 1.5rem;
+  margin: 0 0 1.5rem 0;
+  padding: 1.5rem 1.5rem 1rem 1.5rem;
   font-size: 1.4rem;
   font-weight: 600;
+  border-bottom: 2px solid #f0f0f0;
 }
 
 .modal-content {
   width: 100%;
   position: relative;
-  left: 40px;
-  margin-bottom: 1rem;
-  height: auto;
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  padding: 1rem 0;
-  background: white;
+  padding: 1.5rem;
+  background: #f8f9fa;
   border-top: 1px solid #eee;
   margin-top: auto;
 }
@@ -467,57 +470,63 @@ tbody tr:hover {
   cursor: not-allowed;
 }
 
-/* Add book form specific styles */
+/* Add book form specific styles - Corregido */
 .add-book-form {
-  display: block;
+  display: flex;
   flex-direction: column;
+  gap: 1.5rem;
   width: 100%;
 }
 
 .form-row {
   display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 1rem;
   width: 100%;
 }
 
 .form-group {
-  display: table-cell;
+  display: flex;
   flex-direction: column;
   gap: 0.5rem;
   flex: 1;
-  min-width: 0; /* Evita que los inputs se desborden */
+  min-width: 0;
 }
 
 .form-group label {
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
   color: #444;
 }
 
 .form-group input,
 .form-group select,
 .form-group textarea {
-  padding: 0.6rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  transition: all 0.2s;
+  padding: 0.75rem;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
   width: 100%;
   box-sizing: border-box;
+  font-family: inherit;
 }
 
 .form-group textarea {
   resize: vertical;
   min-height: 80px;
+  line-height: 1.5;
 }
 
 /* Para filas que ocupan todo el ancho */
 .form-row-full {
+  display: grid !important;
   grid-template-columns: 1fr !important;
 }
 
 .form-group input:focus,
-.form-group select:focus {
+.form-group select:focus,
+.form-group textarea:focus {
   border-color: #646cff;
   outline: none;
   box-shadow: 0 0 0 3px rgba(100, 108, 255, 0.15);
@@ -540,15 +549,6 @@ tbody tr:hover {
   content: "";
 }
 
-/* Form textarea styles */
-.form-textarea {
-  width: 100% !important;
-  min-height: 80px;
-  resize: vertical;
-  line-height: 1.5;
-  font-family: inherit;
-}
-
 /* Number input styles */
 .form-group input[type="number"] {
   appearance: textfield;
@@ -560,10 +560,4 @@ tbody tr:hover {
 .form-group input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
-}
-
-/* Full width form rows */
-.form-row-full {
-  display: flex !important;
-  grid-template-columns: 1fr !important;
 }
