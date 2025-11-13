@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field , ConfigDict
 from typing import ClassVar, List
 from datetime import datetime , timezone
 from enum import Enum
@@ -228,3 +228,26 @@ class OrderByIdResponse(BaseModel):
                 "created_at": "2024-01-15T10:30:00Z"
             }
         }
+        
+class allOrder(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "order_id": 1,
+                "status": "completed",
+                "total": 100.00,
+                "created_at": "2023-01-01T00:00:00Z",
+                "items": [
+                    {"order_item_id": 1, "product_id": 1, "product_title": "Book A", "quantity": 2, "unit_price": 30.00, "sub_total": 60.00},
+                    {"order_item_id": 2, "product_id": 2, "product_title": "Book B", "quantity": 1, "unit_price": 40.00, "sub_total": 40.00}
+                ],
+                "items_count": 2
+            }
+        }
+    )
+    order_id: int
+    status: OrdenStatus
+    total: float
+    created_at: datetime
+    items: list[OrderItemResponse]
+    items_count: int  

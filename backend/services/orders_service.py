@@ -426,6 +426,15 @@ def get_order_pdf(session: Session, order_id: int):
         print(f"Error generando PDF: {e}")
         return None
 
+def get_all_orders(session:Session,limit:int=10,offset:int=0)-> List[Tuple[Order, List[OrderItemDetail]]]:
+    order_repo= OrderRepository(session)
+    orders=order_repo.get_all_orders(limit,offset)
+    orders_with_details=[]
+    for order in orders:
+        if order.order_id:
+            items_details=get_order_details(session,order.order_id)[1]
+            orders_with_details.append((order,items_details))
+    return orders_with_details
 
 def _get_status_display(status: str) -> str:
     """Convierte el status a texto amigable."""

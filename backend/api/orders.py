@@ -13,6 +13,7 @@ from schemas.create_order import (
     EditOrderItemRequest, 
     OrderItemResponse,
     OrderByIdResponse,
+    allOrder,
     OrdenStatus,
     CreateOrderResponse , 
     AddOrderItemRequest,
@@ -31,6 +32,7 @@ from services.orders_service import (
     get_order_details,
     get_user_orders,
     get_order_by_id,
+    get_all_orders,
     get_order_pdf,
     InsufficientStockError,
     ProductNotFoundError,
@@ -347,4 +349,39 @@ def get_order_document_endpoint(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al obtener el documento del pedido: {str(e)}"
+        )
+        
+@router.get("/orders/external", response_model=list[allOrder],tags=["Orders (Obtener Todos los Pedidos) - External Endpoint"])
+def get_all_orders_external(
+    page: int = 1,
+    page_size: int = 10,
+    session: Session = Depends(get_session)
+):
+    try:
+        orders_with_details = get_all_orders(session, limit=page_size, offset=(page-1)*page_size)
+        orders_response = []
+        for order, items in orders_with_details:
+            items_response = [
+                OrderItemResponse(
+                    order_item_id=item["order_item_id"],
+                    product_id=item["product_id"],
+                    product_title=item["product_title"],
+                    quantity=item["quantity"],
+                    unit_price=item["unit_price"],
+                    sub_total=item["sub_total"]
+                ) for item in items
+            ]
+            orders_response.append(allOrder(    
+                order_id=order.order_id,
+                status=OrdenStatus(order.status),
+                total=order.total,
+                created_at=order.created_at,
+                items=items_response,
+                items_count=len(items_response)
+            ))
+        return orders_response
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener todos los pedidos: {str(e)}"
         )

@@ -108,3 +108,12 @@ class OrderRepository:
             .where(Order.created_at <= end_date_)
         )
         return list(self.session.exec(statement).all())
+    
+    def get_all_orders(self,limit:int=10,offset:int=0) -> list[Order]:
+        statement = (
+            select(Order)
+            .order_by(Order.created_at.desc()) # type: ignore
+            .limit(limit)
+            .offset(offset)
+        )
+        return list(self.session.exec(statement).all())
