@@ -58,6 +58,10 @@ const Sidebar = () => {
                   <span className="nav-icon">📚</span>
                   {!isCollapsed && <span className="nav-label">Inventario</span>}
                 </Link>
+                <Link to="/pedidos" className={`nav-item ${location.pathname === '/pedidos' ? 'active' : ''}`}>
+                  <span className="nav-icon">📋</span>
+                  {!isCollapsed && <span className="nav-label">Gestión de Pedidos</span>}
+                </Link>
                 <Link to="/reportes" className={`nav-item ${location.pathname === '/reportes' ? 'active' : ''}`}>
                   <span className="nav-icon">📑</span>
                   {!isCollapsed && <span className="nav-label">Reportes</span>}
