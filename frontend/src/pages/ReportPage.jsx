@@ -72,7 +72,7 @@ const ReportPage = () => {
                                 maxDate={new Date()}
                             />
                             <button className="date-info-button">
-                                📊 Ver desde: {startDate.split('T')[0]} hasta: {endDate.split('T')[0]}
+                                📊🗓️ Estas viendo desde: {startDate.split('T')[0]} hasta: {endDate.split('T')[0]}
                             </button>
                         </div>
                     </section>

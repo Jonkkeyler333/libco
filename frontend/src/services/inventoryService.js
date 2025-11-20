@@ -1,7 +1,8 @@
 import axios from 'axios';
 
-const API_URL_inv = import.meta.env.VITE_API_URL + '/api/inventory';
-const API_URL_pro = import.meta.env.VITE_API_URL + '/api/products';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL_inv = `${API_BASE_URL}/api/inventory/`;
+const API_URL_pro = `${API_BASE_URL}/api/products/`;
 
 export const getInventory = async (filter = filter) => {
   const param = new URLSearchParams(filter).toString();

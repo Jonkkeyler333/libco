@@ -1,58 +1,56 @@
+import os
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
 from alembic import context
-
+from sqlalchemy import create_engine
 from sqlmodel import SQLModel
+from models import (
+    User, UserRole, Order, Product, OrderItem, Inventory,
+    Category, CategoryProductLink, AuditLog
+)
 
-from models import User , UserRole, Order, Product, OrderItem, Inventory, Category, CategoryProductLink, AuditLog
-
-
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
+from core.config import settings
 config = context.config
-DATABASE_URL: str = "postgresql://postgres:postgres@db:5432/appdb"
 
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# add your model's MetaData object here
-# for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
 target_metadata = SQLModel.metadata
 
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
+DATABASE_URL = settings.database_url_sqlalchemy
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL environment variable is not set.")
 
+config.set_main_option('sqlalchemy.url', DATABASE_URL)
 
 def run_migrations_offline():
-    url = DATABASE_URL
-    context.configure(url=url, target_metadata=target_metadata, literal_binds=True)
+    """Run migrations in 'offline' mode."""
+    context.configure(
+        url=DATABASE_URL,
+        target_metadata=target_metadata,
+        literal_binds=True
+    )
     with context.begin_transaction():
         context.run_migrations()
 
+
 def run_migrations_online():
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
-        prefix="sqlalchemy.",
-        url=DATABASE_URL,
-        poolclass=None,
-    )
+    """Run migrations in 'online' mode."""
+    from db.database import engine
+    connectable = engine
+
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata
+        )
         with context.begin_transaction():
             context.run_migrations()
+
 
 if context.is_offline_mode():
     run_migrations_offline()

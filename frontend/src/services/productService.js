@@ -8,7 +8,7 @@ export const productService = {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      const response = await fetch(`${API_URL}/api/products`, {
+      const response = await fetch(`${API_URL}/api/products/`, {
         headers
       });
       

@@ -12,11 +12,12 @@ export default function AdminOrdersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);
   const [hasNextPage, setHasNextPage] = useState(false);
+  const [externalOrders, setExternalOrders] = useState([]);
   const navigate = useNavigate();
 
-  // Cargar pedidos al montar el componente o cambiar de página
   useEffect(() => {
     fetchOrders();
+    fetchExternalOrders();
   }, [currentPage]);
 
   const fetchOrders = async () => {
@@ -25,9 +26,6 @@ export default function AdminOrdersPage() {
     try {
       const data = await getAllOrders(currentPage, pageSize);
       setOrders(data);
-      
-      // Detectar si hay más páginas: si la cantidad de órdenes es igual al pageSize,
-      // es probable que haya más órdenes en la siguiente página
       setHasNextPage(data.length === pageSize);
     } catch (err) {
       console.error('Error al cargar pedidos:', err);
@@ -36,16 +34,28 @@ export default function AdminOrdersPage() {
       setLoading(false);
     }
   };
+  //este fetch nunca servira ya que el otro querido grupo de desarrolladores no fue capaz de implementar su api en su aplicativo
+  const fetchExternalOrders = async () => {
+    try {
+      const response = await fetch('http://10.6.101.152:5173/pedidos/completados/');
+      if (!response.ok) {
+        console.log('Error al obtener pedidos externos:', response.statusText);
+        setExternalOrders([]);        
+        return;
+      }
+    }catch (err) {
+      console.error('Error al cargar pedidos externos:', err);
+      setExternalOrders([]);   
+    }
+  };
 
   const handleViewDetails = async (orderId) => {
     try {
-      // Buscar la orden en la lista actual para obtener los items
       const orderFromList = orders.find(o => o.order_id === orderId);
       if (orderFromList) {
         setSelectedOrder(orderFromList);
         setShowDetailModal(true);
       } else {
-        // Si no está en la lista actual, intentar obtener detalles del API
         const orderData = await getOrderDetails(orderId);
         setSelectedOrder(orderData);
         setShowDetailModal(true);
@@ -153,7 +163,6 @@ export default function AdminOrdersPage() {
               </tbody>
             </table>
           </div>
-
           <div className="admin-orders-pagination">
             <button 
               disabled={currentPage === 1}
@@ -173,7 +182,9 @@ export default function AdminOrdersPage() {
           </div>
         </>
       )}
-
+      {externalOrders.length === 0 ? (<div className="admin-orders-empty">
+          <p>No hay pedidos disponibles de la otra empresa</p>
+        </div>) : (<h1>Si hay pedidos</h1>)}  
       {/* Modal de Detalles */}
       {showDetailModal && selectedOrder && (
         <div className="modal-overlay" onClick={closeDetailModal}>
@@ -253,7 +264,6 @@ export default function AdminOrdersPage() {
                 )}
               </div>
             </div>
-
             <div className="modal-footer">
               <button className="btn-close" onClick={closeDetailModal}>Cerrar</button>
             </div>

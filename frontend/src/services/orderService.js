@@ -9,7 +9,7 @@ export const orderService = {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      const response = await fetch(`${API_URL}/api/orders`, {
+      const response = await fetch(`${API_URL}/api/orders/`, {
         method: 'POST',
         headers,
         body: JSON.stringify(orderData)

@@ -60,7 +60,7 @@ def update_inventory(
 
         inventory = session.get(Inventory, product_id)
         if not inventory:
-            continue  # o lanzar error si prefieres detener todo
+            continue 
 
         inventory.quantity = quantity
         inventory.last_updated = datetime.now(timezone.utc)
@@ -88,7 +88,6 @@ def add_inventory(
         raise HTTPException(status_code=403, detail="Acceso denegado")
 
     try:
-        # Validar campos requeridos
         if not inventory_data.get("product_id"):
             raise HTTPException(
                 status_code=400,
