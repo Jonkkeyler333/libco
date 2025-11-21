@@ -49,7 +49,7 @@ app = FastAPI(
 
 # CORS - configuración explícita para deploy
 allowed_origins = list(set(settings.CORS_ORIGINS + [settings.FRONTEND_URL]))
-logger.info(fCORS Allowed Origins: {allowed_origins}")
+logger.info(f"CORS Allowed Origins: {allowed_origins}")
 
 app.add_middleware(
     CORSMiddleware,
